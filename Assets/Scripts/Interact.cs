@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -21,12 +22,19 @@ public class Interact : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if(other.gameObject.CompareTag("Player")) playerInside=true;
+        if(other.gameObject.CompareTag("Player"))
+        {
+            playerInside = true;
+        }
+        
     }
-    
+
     void OnTriggerExit2D(Collider2D other)
     {
-        if(other.gameObject.CompareTag("Player")) playerInside=false;
+        if(other.gameObject.CompareTag("Player"))
+        {
+            playerInside = false;
+        }
     }
 
     void ToggleUI()

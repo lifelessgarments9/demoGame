@@ -7,6 +7,7 @@ public class PlayerVisual : MonoBehaviour
     string currentState;
     string idleState;
     bool wasMoving;
+    
 
 
     void Awake()
@@ -17,6 +18,8 @@ public class PlayerVisual : MonoBehaviour
     {
         Vector2 dir = Player.Instance.LastMoveDir;
         bool moving = Player.Instance.IsMoving;
+        
+        
 
         if (!moving && wasMoving) //if 2f idle  - wasMoving constr, if moving - !moving constr => only first frame of idle
         {
@@ -24,25 +27,34 @@ public class PlayerVisual : MonoBehaviour
         }
 
         wasMoving = moving;
-        
+
         string newState;
 
-        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
+        if (moving)
         {
-            if (dir.x > 0)
-                newState = moving ? "WalkRight" : idleState;
+            if (dir.x > 0 && dir.y > 0)
+                newState = "WalkUpRight";      // W + D
+            else if (dir.x < 0 && dir.y > 0)
+                newState = "WalkUpLeft";       // W + A
+            else if (dir.x > 0 && dir.y < 0)
+                newState = "WalkDownRight";    // S + D
+            else if (dir.x < 0 && dir.y < 0)
+                newState = "WalkDownLeft";     // S + A
+
+            else if (dir.x > 0)
+                newState = "WalkRight";    //d
+            else if (dir.x < 0)
+                newState = "WalkLeft";  //a
+            else if (dir.y > 0)
+                newState = "WalkUp";   //w
             else
-                newState = moving ? "WalkLeft" : idleState;
+                newState = "WalkDown";  //s
         }
         else
         {
-            if (dir.y > 0)
-                newState = moving ? "WalkUp" : idleState;
-            else
-                newState = moving ? "WalkDown" : idleState;
+            newState = idleState;
         }
         
-
         if (currentState != newState)
         {
             animator.Play(newState);
@@ -52,20 +64,23 @@ public class PlayerVisual : MonoBehaviour
     
     string PickIdle(Vector2 dir)
     {
-        if (Mathf.Abs(dir.x) > Mathf.Abs(dir.y))
-        {
-            if (dir.x > 0)
-                return Random.value < 0.85f ? "IdleRight1" : "IdleRight";
-            else
-                return Random.value < 0.85f ? "IdleLeft1" : "IdleLeft";
-        }
+        if (dir.x > 0 && dir.y > 0)
+            return "IdleUpRight";      // W + D
+        else if (dir.x < 0 && dir.y > 0)
+            return "IdleUpLeft";       // W + A
+        else if (dir.x > 0 && dir.y < 0)
+            return "IdleDownRight";    // S + D
+        else if (dir.x < 0 && dir.y < 0)
+            return "IdleDownLeft";     // S + A
+
+        else if (dir.x > 0)
+            return "IdleRight";    //d
+        else if (dir.x < 0)
+            return "IdleLeft";  //a
+        else if (dir.y > 0)
+            return "IdleUp";   //w
         else
-        {
-            if (dir.y > 0)
-                return Random.value < 0.85f ? "IdleUp1" : "IdleUp";
-            else
-                return Random.value < 0.85f ? "IdleDown1" : "IdleDown";
-        }
+            return "IdleDown";  //s
     }
 
 }

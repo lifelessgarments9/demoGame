@@ -5,15 +5,16 @@ public class Player : MonoBehaviour
     public static Player Instance { get; private set; }
     public Vector2 LastMoveDir { get; private set; }
     public bool IsMoving { get; private set; }
-
-    
+    private AudioSource footsteps;
     [SerializeField] float speed = 5f;
     private Rigidbody2D rb;
     public bool inputLocked = false;
+    bool footstepPlaying=false;
     private void Awake()
     {
         Instance = this;
         rb = GetComponent<Rigidbody2D>();
+        footsteps=GetComponent<AudioSource>();
     }
 
     private void FixedUpdate()
@@ -42,7 +43,22 @@ public class Player : MonoBehaviour
             vector.Normalize();
             LastMoveDir = vector;
             rb.MovePosition(rb.position + vector * speed * Time.fixedDeltaTime);
+            if (!footstepPlaying)
+            {
+                footsteps.Play();
+                
+                footstepPlaying = true;
+            }
         }
+        else
+        {
+            if (footstepPlaying)
+            {
+                footsteps.Stop();
+                footstepPlaying = false;
+            }
+        }
+        
     }
     
 }

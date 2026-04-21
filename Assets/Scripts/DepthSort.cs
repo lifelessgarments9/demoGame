@@ -5,7 +5,8 @@ public class DepthSort : MonoBehaviour
 {
     SpriteRenderer sr;
     Collider2D col;
-    const int precision = 100;   
+    const int precision = 100;
+    private const float delay = 1f;
 
     void Awake()
     {
