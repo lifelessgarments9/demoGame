@@ -15,11 +15,8 @@ public class BookInteraction : MonoBehaviour
 
         if (Keyboard.current.eKey.wasPressedThisFrame)
         {
-            if (herbariumController != null)
-            {
-                herbariumController.OpenBook(pawIndex);        
-                player.inputLocked = true;             
-            }
+            herbariumController.OpenBook(pawIndex);        
+            player.inputLocked = true;             
         }
     }
 

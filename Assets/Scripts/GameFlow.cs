@@ -7,41 +7,19 @@ public class GameFlow : MonoBehaviour
     [SerializeField] GameObject UIMenu;
     [SerializeField] Player player;
     [SerializeField] float hidemenudelay=0.7f;
-    private Animator animator;
+    [SerializeField] Animator animator;
     private GameObject go;
-    private CanvasGroup cg;
     private GameState currentState;
     
-    public enum GameState
-    {
-        Menu,
-        Game
-    }
-    void Awake()
-    {
-        animator = GetComponent<Animator>();
-        cg=GetComponent<CanvasGroup>();
-        //go = GetComponent<GameObject>();
-    }
-    void Start()
-    {
-        SetGameState(GameState.Menu);
-    }
+    public enum GameState {Menu, Game}
+    void Start() => SetGameState(GameState.Menu); 
 
     void Update()
     {
-        
         if (Keyboard.current.enterKey.wasPressedThisFrame && currentState==GameState.Menu)
         {
-            SetGameState(GameState.Game);
-            //OnStartButton();
+            OnStartButton();
         }
-        //---------del before production
-        if (Keyboard.current.pKey.wasPressedThisFrame && currentState == GameState.Game)
-        {
-            SetGameState(GameState.Menu);
-        }
-        //if(Keyboard.current.enterKey.wasPressedThisFrame||Keyboard.current.spaceKey.wasPressedThisFrame)
     }
 
     public void OnStartButton()
@@ -51,20 +29,13 @@ public class GameFlow : MonoBehaviour
 
     public void OnAnimationFinished()
     {
-        //cg.alpha = 0;
-        
         animator.gameObject.SetActive(false);
     }
 
     void SetGameState(GameState state)
     {
         currentState=state;
-        
-        //animator.ResetTrigger("Opening");
-        //animator.ResetTrigger("Closing");
-        
         animator.gameObject.SetActive(true);
-        //cg.alpha = 1;
         switch (state)
         {
             case GameState.Menu:

@@ -19,8 +19,20 @@ public class Player : MonoBehaviour
 
     private void FixedUpdate()
     {
-        if (inputLocked) return;
-        HandleMovement();
+        if (inputLocked)
+        {
+            if (!footstepPlaying)
+            {
+                footsteps.Play();
+                
+                footstepPlaying = true;
+            }
+        }
+        else
+        {
+            HandleMovement();
+        };
+        
     }
 
     private void HandleMovement()
@@ -46,7 +58,6 @@ public class Player : MonoBehaviour
             if (!footstepPlaying)
             {
                 footsteps.Play();
-                
                 footstepPlaying = true;
             }
         }

@@ -23,8 +23,6 @@ public class ChunkActivationSystem : MonoBehaviour
             chunk.SetActive(false);
         }
     }
-    
-
     void Update()
     {
         timer += Time.deltaTime;

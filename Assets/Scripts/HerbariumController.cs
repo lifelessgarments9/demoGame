@@ -2,6 +2,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using System.Collections;
+using UnityEngine.InputSystem;
+using UnityEngine.EventSystems;
 
 public class HerbariumController : MonoBehaviour
 {
@@ -10,6 +12,9 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] Button rightButton;
     [SerializeField] VideoPlayer videoPlayer;
     [SerializeField] Animator pawAnimator;
+    [SerializeField] float showbookdelay=0.7f;
+    [SerializeField] Animator darkAnimator;
+    [SerializeField] private Player player;
 
     [SerializeField] VideoClip[] pageClips;     // page0, page1...
     [SerializeField] VideoClip[] donePageClips; // donepage0...
@@ -35,6 +40,8 @@ public class HerbariumController : MonoBehaviour
     
     private int currentPage = 2;
     private bool isAnimating = false;
+    private int pawIndex;
+    private Coroutine quitRoutine;
 
     private bool[] pageState = new bool[5];
 
@@ -45,13 +52,69 @@ public class HerbariumController : MonoBehaviour
         leftButton.onClick.AddListener(PrevPage);
         rightButton.onClick.AddListener(NextPage);
     }
+    
+    void Update()
+    {
+        if (!bookRoot.activeInHierarchy) return;
+        if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
+        {
+            PrevPage();
+        }
+        if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
+        {
+            NextPage();
+        }
+    }
+
+    public void TryQuitFromClick()
+    {
+        if (!isAnimating 
+            && currentPage == pawIndex 
+            && quitRoutine == null 
+            && !pageState[pawIndex]
+           )
+        {
+            TryQuitBook();
+        }
+    }
 
     public void OpenBook(int i)
     {
+        pawIndex = i;
+        darkAnimator.gameObject.SetActive(true);
+        darkAnimator.SetTrigger("Closing");
+        StartCoroutine(ShowBook(showbookdelay,i));
+    }
+    
+    IEnumerator ShowBook(float delay,int i)
+    {
+        yield return new WaitForSeconds(delay);
         bookRoot.SetActive(true);
         PlayPage(GetPageClip(currentPage));
         pawAnimator.gameObject.SetActive(true);
         SetPawState(i);
+    }
+    void TryQuitBook()
+    {
+        if (quitRoutine != null) return;
+        pawAnimator.Play("paw" + pawIndex + "end");
+        darkAnimator.gameObject.SetActive(true);
+        darkAnimator.SetTrigger("Closing");
+        quitRoutine = StartCoroutine(QuitBook(showbookdelay));
+    }
+    IEnumerator QuitBook(float delay)
+    {
+        isAnimating = true;
+        SetButtons(false);
+        yield return new WaitForSeconds(delay);
+        videoPlayer.Stop();
+        videoPlayer.clip = null;
+        bookRoot.SetActive(false);
+        pawAnimator.gameObject.SetActive(false);
+        isAnimating = false;
+        quitRoutine = null;
+        pageState[pawIndex] = true;
+        player.inputLocked = false;
     }
     
     void SetPawState(int i)
