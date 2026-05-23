@@ -15,6 +15,7 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] float showbookdelay=0.7f;
     [SerializeField] Animator darkAnimator;
     [SerializeField] private Player player;
+    [SerializeField] private AudioSource audioSource;
 
     [SerializeField] VideoClip[] pageClips;     // page0, page1...
     [SerializeField] VideoClip[] donePageClips; // donepage0...
@@ -99,7 +100,7 @@ public class HerbariumController : MonoBehaviour
         if (quitRoutine != null) return;
         pawAnimator.Play("paw" + pawIndex + "end");
         darkAnimator.gameObject.SetActive(true);
-        darkAnimator.SetTrigger("Closing");
+        darkAnimator.SetTrigger("Closing2");
         quitRoutine = StartCoroutine(QuitBook(showbookdelay));
     }
     IEnumerator QuitBook(float delay)
@@ -161,7 +162,11 @@ public class HerbariumController : MonoBehaviour
         if (clip == null) yield break;
 
         videoPlayer.isLooping = false;
-
+        
+        videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+        videoPlayer.EnableAudioTrack(0, true);
+        videoPlayer.SetTargetAudioSource(0, audioSource);
+        
         videoPlayer.Stop();
         videoPlayer.clip = clip;
         videoPlayer.Prepare();

@@ -21,11 +21,10 @@ public class Player : MonoBehaviour
     {
         if (inputLocked)
         {
-            if (!footstepPlaying)
+            if (footstepPlaying)
             {
-                footsteps.Play();
-                
-                footstepPlaying = true;
+                footsteps.Stop();
+                footstepPlaying = false;
             }
         }
         else

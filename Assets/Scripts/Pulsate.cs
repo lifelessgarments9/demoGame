@@ -1,14 +1,22 @@
 using UnityEngine;
 
-public class Pulsate : MonoBehaviour
+public class PulsateUI : MonoBehaviour
 {
     [SerializeField] float minScale = 1.9f;
     [SerializeField] float maxScale = 2.1f;
     [SerializeField] float speed = 8f;
     
-    void Update()
+    private RectTransform rectTransform;
+
+    private void Awake()
     {
-        float scale = minScale + (Mathf.Sin(Time.time * speed) + 1f) / 2f * (maxScale - minScale);
-        transform.localScale = Vector3.one * scale;
+        rectTransform = GetComponent<RectTransform>();
+    }
+
+    private void Update()
+    {
+        float scale = minScale + (Mathf.Sin(Time.time * speed) + 1f) * 0.5f * (maxScale - minScale);
+        
+        rectTransform.localScale = Vector3.one * scale;
     }
 }
