@@ -59,11 +59,11 @@ public class HerbariumController : MonoBehaviour
         if (!bookRoot.activeInHierarchy) return;
         if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
         {
-            PrevPage();
+            NextPage();
         }
         if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
         {
-            NextPage();
+            PrevPage();
         }
     }
 

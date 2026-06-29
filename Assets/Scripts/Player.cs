@@ -10,6 +10,7 @@ public class Player : MonoBehaviour
     private Rigidbody2D rb;
     public bool inputLocked = false;
     bool footstepPlaying=false;
+    private Hill hill;
     private void Awake()
     {
         Instance = this;
@@ -52,6 +53,7 @@ public class Player : MonoBehaviour
         if (IsMoving)
         {
             vector.Normalize();
+            if (hill != null) vector = hill.ModifyDirection(rb.position, vector);
             LastMoveDir = vector;
             rb.MovePosition(rb.position + vector * speed * Time.fixedDeltaTime);
             if (!footstepPlaying)
@@ -70,5 +72,13 @@ public class Player : MonoBehaviour
         }
         
     }
-    
+    public void SetHill(Hill h)
+    {
+        hill = h;
+    }
+
+    public void ClearHill(Hill h)
+    {
+        if (hill == h) hill = null;
+    }
 }

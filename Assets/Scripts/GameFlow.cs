@@ -10,6 +10,7 @@ public class GameFlow : MonoBehaviour
     [SerializeField] Animator animator;
     private GameObject go;
     private GameState currentState;
+    public GameState CurState => currentState;
     
     public enum GameState {Menu, Game}
     void Start() => SetGameState(GameState.Menu); 
