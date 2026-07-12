@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 [RequireComponent(typeof(Collider2D))]
 public class StaticDepthSortComposite : MonoBehaviour

@@ -9,20 +9,22 @@ public class BookInteraction : MonoBehaviour
     [SerializeField] private int pawIndex;
     [SerializeField] private GameObject image;
     private bool playerInside = false;
+    private bool used = false;
 
     void Update()
     {
-        if (!playerInside) return;
+        if (!playerInside || used) return;
 
         if (Keyboard.current.eKey.wasPressedThisFrame&&extraBook == null)
         {
             herbariumController.OpenBook(pawIndex);
-            player.inputLocked = true;
+            player.inputLocked = true; 
+            used = true;
         }
         if (Keyboard.current.eKey.wasPressedThisFrame&&extraBook != null)
         {
             extraBook.OpenBook(image);
-            player.inputLocked = true;
+            used = true;
         }
 
     }

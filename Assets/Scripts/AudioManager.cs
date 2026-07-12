@@ -6,6 +6,8 @@ public class AudioManager : MonoBehaviour
 
     [SerializeField] AudioSource sfxSource;
     [SerializeField] AudioSource musicSource;
+    [SerializeField] AudioClip dasha; 
+    [SerializeField] AudioClip gameStartSound; 
 
     private void Awake()
     {
@@ -16,11 +18,17 @@ public class AudioManager : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject);
         
         sfxSource.Play();
         musicSource.Play();
     }
-
-
+    public void Dasha()
+    {
+        sfxSource.PlayOneShot(dasha);
+    }
+    
+    public void GameStart()
+    {
+        sfxSource.PlayOneShot(gameStartSound);
+    }
 }

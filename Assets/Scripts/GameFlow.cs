@@ -1,13 +1,20 @@
 using UnityEngine.InputSystem;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class GameFlow : MonoBehaviour
 {
     [SerializeField] GameObject UIMenu;
     [SerializeField] Player player;
     [SerializeField] float hidemenudelay=0.7f;
+    [SerializeField] float dashaDelay=3f;
     [SerializeField] Animator animator;
+    [Header("Thought Chain")]
+    [SerializeField] MindTrigger mindTrigger;
+    [SerializeField] List<GameObject> thoughtImgs; 
+    [SerializeField] GameObject mindTriggerGroup;
+    
     private GameObject go;
     private GameState currentState;
     public GameState CurState => currentState;
@@ -47,7 +54,9 @@ public class GameFlow : MonoBehaviour
             case GameState.Game:
                 player.inputLocked = false;
                 animator.SetTrigger("Closing");
+                AudioManager.Instance.GameStart();
                 StartCoroutine(HideMenu(hidemenudelay));
+                StartCoroutine(PlayDasha(dashaDelay));
                 break;
         }
     }
@@ -57,5 +66,23 @@ public class GameFlow : MonoBehaviour
         yield return new WaitForSeconds(delay);
         UIMenu.SetActive(false);
     }
-
+    IEnumerator PlayDasha(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        AudioManager.Instance.Dasha();
+        yield return new WaitForSeconds(32f);
+        
+        foreach (var img in thoughtImgs)
+        {
+            if (img != null)
+            {
+                yield return StartCoroutine(mindTrigger.ShowThought(img));
+            }
+        }
+        
+        if (mindTriggerGroup != null)
+        {
+            mindTriggerGroup.SetActive(true);
+        }
+    }
 }

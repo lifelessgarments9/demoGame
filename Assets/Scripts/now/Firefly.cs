@@ -15,6 +15,7 @@ public class Firefly : MonoBehaviour
     [Header("Orbit")]
     [SerializeField] private float ellipseX = 1.5f;
     [SerializeField] private float ellipseY = 0.7f;
+    [SerializeField] private float orbitYOffset = 0.5f;
 
     [Header("Random")]
     [SerializeField] private float moveNoise = 0.3f;
@@ -131,8 +132,7 @@ public class Firefly : MonoBehaviour
         );
         offset = orbitRotationQuat * offset;
 
-        Vector3 targetPos =
-            player.position + offset;
+        Vector3 targetPos = player.position + Vector3.up * orbitYOffset + offset;
 
         transform.position = Vector3.Lerp(
             transform.position,

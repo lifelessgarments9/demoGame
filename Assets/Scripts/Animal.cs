@@ -13,8 +13,4 @@ public class Animal : MonoBehaviour
         }
     }
 
-    public void DisableSelf()
-    {
-        Destroy(gameObject);
-    }
 }

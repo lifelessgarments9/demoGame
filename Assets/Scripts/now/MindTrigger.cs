@@ -32,7 +32,7 @@ public class MindTrigger : MonoBehaviour
         }
     }
 
-    IEnumerator ShowThought(GameObject img)
+    public IEnumerator ShowThought(GameObject img)
     {
         CanvasGroup cg = img.GetComponent<CanvasGroup>();
 

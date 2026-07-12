@@ -15,21 +15,20 @@ public class ExtraBook : MonoBehaviour
 
     public void OpenBook(GameObject image)
     {
-        if (routine != null)
-            return;
+        if (routine != null) return;
 
         routine = StartCoroutine(BookRoutine(image));
     }
 
     IEnumerator BookRoutine(GameObject image)
     {
+        player.inputLocked = true;
         
         darkAnimator.gameObject.SetActive(true);
         darkAnimator.SetTrigger("Closing");
 
         yield return new WaitForSeconds(transitionDelay);
-
-
+        image.SetActive(true);
         // показ книги
         yield return new WaitForSeconds(showTime);
 
@@ -38,7 +37,7 @@ public class ExtraBook : MonoBehaviour
         darkAnimator.SetTrigger("Closing2");
 
         yield return new WaitForSeconds(transitionDelay);
-
+        image.SetActive(false);
 
         player.inputLocked = false;
         routine = null;
