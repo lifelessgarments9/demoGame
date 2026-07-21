@@ -6,13 +6,18 @@ using System.Collections.Generic;
 public class GameFlow : MonoBehaviour
 {
     [SerializeField] GameObject UIMenu;
+    [SerializeField] private GameObject engPlayButton;
+    [SerializeField] private GameObject ruPlayButton;
+    [SerializeField] private GameObject engLangButton;
+    [SerializeField] private GameObject ruLangButton;
     [SerializeField] Player player;
     [SerializeField] float hidemenudelay=0.7f;
     [SerializeField] float dashaDelay=3f;
     [SerializeField] Animator animator;
     [Header("Thought Chain")]
     [SerializeField] MindTrigger mindTrigger;
-    [SerializeField] List<GameObject> thoughtImgs; 
+    [SerializeField] List<GameObject> thoughtImgs;
+    [SerializeField] List<GameObject> engThoughtImgs;
     [SerializeField] GameObject mindTriggerGroup;
     
     private GameObject go;
@@ -20,6 +25,8 @@ public class GameFlow : MonoBehaviour
     public GameState CurState => currentState;
     
     public enum GameState {Menu, Game}
+
+    public static bool IsRussian { get; private set; } = true;
     void Start() => SetGameState(GameState.Menu); 
 
     void Update()
@@ -33,6 +40,20 @@ public class GameFlow : MonoBehaviour
     public void OnStartButton()
     {
         SetGameState(GameState.Game);
+    }
+    
+    public void OnLangButton()
+    {
+        IsRussian = !IsRussian;
+        UpdateLanguageUI();
+    }
+
+    private void UpdateLanguageUI()
+    {
+        engPlayButton.SetActive(!IsRussian);
+        engLangButton.SetActive(!IsRussian);
+        ruPlayButton.SetActive(IsRussian);
+        ruLangButton.SetActive(IsRussian);
     }
 
     public void OnAnimationFinished()
@@ -48,6 +69,7 @@ public class GameFlow : MonoBehaviour
         {
             case GameState.Menu:
                 UIMenu.SetActive(true);
+                UpdateLanguageUI();
                 player.inputLocked = true;
                 animator.SetTrigger("Opening");
                 break;
@@ -72,12 +94,10 @@ public class GameFlow : MonoBehaviour
         AudioManager.Instance.Dasha();
         yield return new WaitForSeconds(32f);
         
-        foreach (var img in thoughtImgs)
+        var images = IsRussian ? thoughtImgs : engThoughtImgs;
+        foreach (var img in images)
         {
-            if (img != null)
-            {
-                yield return StartCoroutine(mindTrigger.ShowThought(img));
-            }
+            yield return StartCoroutine(mindTrigger.ShowThought(img));
         }
         
         if (mindTriggerGroup != null)

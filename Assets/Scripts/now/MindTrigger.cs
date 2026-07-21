@@ -5,6 +5,7 @@ using UnityEngine;
 public class MindTrigger : MonoBehaviour
 {
     [SerializeField] private List<GameObject> thoughtImgs;
+    [SerializeField] private List<GameObject> engThoughtImgs;
 
     [SerializeField] private float ShowTime = 5f;
     [SerializeField] private float FadeTime = 2f;
@@ -26,9 +27,13 @@ public class MindTrigger : MonoBehaviour
 
     IEnumerator ThoughtChain()
     {
-        foreach (var img in thoughtImgs)
+        var images = GameFlow.IsRussian ? thoughtImgs : engThoughtImgs;
+        foreach (var img in images)
         {
-            yield return ShowThought(img);
+            if (img != null)
+            {
+                yield return ShowThought(img);
+            }
         }
     }
 

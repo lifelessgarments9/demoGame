@@ -4,10 +4,12 @@ public class AudioManager : MonoBehaviour
 {
     public static AudioManager Instance { get; private set; }
 
-    [SerializeField] AudioSource sfxSource;
-    [SerializeField] AudioSource musicSource;
-    [SerializeField] AudioClip dasha; 
-    [SerializeField] AudioClip gameStartSound; 
+    [SerializeField] private AudioSource sfxSource;
+    [SerializeField] private AudioSource ambientSource;
+    [SerializeField] AudioClip dasha;
+    [SerializeField] AudioClip engDasha; 
+    [SerializeField] AudioClip gameStartSound;
+    [SerializeField] AudioClip crickets;
 
     private void Awake()
     {
@@ -16,15 +18,15 @@ public class AudioManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-
         Instance = this;
-        
-        sfxSource.Play();
-        musicSource.Play();
+        ambientSource.loop = true;
+        ambientSource.clip = crickets;
+        ambientSource.Play();
     }
     public void Dasha()
     {
-        sfxSource.PlayOneShot(dasha);
+        if (GameFlow.IsRussian) sfxSource.PlayOneShot(dasha);
+        else sfxSource.PlayOneShot(engDasha);
     }
     
     public void GameStart()
