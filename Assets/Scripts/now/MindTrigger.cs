@@ -9,6 +9,7 @@ public class MindTrigger : MonoBehaviour
 
     [SerializeField] private float ShowTime = 5f;
     [SerializeField] private float FadeTime = 2f;
+    [SerializeField] GameObject mindTriggerGroup;
 
     private bool triggered;
 
@@ -21,7 +22,13 @@ public class MindTrigger : MonoBehaviour
             return;
 
         triggered = true;
-
+        foreach (Transform child in mindTriggerGroup.transform)
+        {
+            if (child.gameObject != this.gameObject)
+            {
+                child.gameObject.SetActive(false);
+            }
+        }
         StartCoroutine(ThoughtChain());
     }
 
@@ -35,6 +42,7 @@ public class MindTrigger : MonoBehaviour
                 yield return ShowThought(img);
             }
         }
+        foreach (Transform child in mindTriggerGroup.transform) child.gameObject.SetActive(true);
     }
 
     public IEnumerator ShowThought(GameObject img)
