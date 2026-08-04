@@ -3,6 +3,7 @@ using UnityEngine.UI;
 using UnityEngine.Video;
 using System.Collections;
 using UnityEngine.InputSystem;
+using System.Linq;
 
 public class HerbariumController : MonoBehaviour
 {
@@ -10,12 +11,26 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] Button leftButton;
     [SerializeField] Button rightButton;
     [SerializeField] VideoPlayer videoPlayer;
+    [SerializeField] VideoPlayer bookVideoPlayer;
     [SerializeField] Animator pawAnimator;
-    [SerializeField] float showbookdelay=0.7f;
-    [SerializeField] float closebookdelay=0.7f;
     [SerializeField] Animator darkAnimator;
     [SerializeField] private Player player;
     [SerializeField] private AudioSource audioSource;
+    [SerializeField] private float animation1Chance = 0.4f; 
+    [SerializeField] private float animation2Chance = 0.7f;
+    [SerializeField] private AudioClip failSound;
+    [SerializeField] private VideoClip failClip1;
+    [SerializeField] private VideoClip failClip2;
+    [SerializeField] private VideoClip endingClip;
+    [SerializeField] private GameObject endingImage;
+    [SerializeField] GameObject vignetteAnimator;
+    public bool darkAnimationFinished;
+    private bool failAnimation1Played = false;
+    private bool failAnimation2Played = false;
+    private bool lastHerb = false;
+    
+    private bool failCooldown;
+    [SerializeField] private float failCooldownTime = 10f;
 
     [SerializeField] VideoClip[] pageClips;     // page0, page1...
     [SerializeField] VideoClip[] donePageClips; // donepage0...
@@ -40,7 +55,7 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] ReverseTurnSet[] revturns; // 4
     
     private int currentPage = 2;
-    private bool isAnimating = false;
+    private bool isAnimating;
     private int pawIndex; //текущее растение
 
     private bool[] pageState = new bool[5];
@@ -49,30 +64,35 @@ public class HerbariumController : MonoBehaviour
 
     void Start()
     {
+        videoPlayer.gameObject.SetActive(false);
+        videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+        videoPlayer.EnableAudioTrack(0, true);
+        videoPlayer.SetTargetAudioSource(0, audioSource);
+        
         bookRoot.SetActive(false);
-
         leftButton.onClick.AddListener(PrevPage);
         rightButton.onClick.AddListener(NextPage);
+        videoPlayer.loopPointReached += OnVideoFinished;
+        videoPlayer.isLooping = false;
+        
+        InputManager.Instance.BookPressed += OnBookPressed;
+        InputManager.Instance.LeftPressed += NextPage;
+        InputManager.Instance.RightPressed += PrevPage;
     }
     
-    void Update()
+    void OnBookPressed()
     {
-        if (Keyboard.current.bKey.wasPressedThisFrame && !isAnimating)
-        {
-            if (!bookRoot.activeSelf)
-                StartCoroutine(OpenViewer());
-            else if (viewMode)
-                StartCoroutine(CloseViewer());
+        if (isAnimating)
             return;
+
+        if (!bookRoot.activeSelf)
+        {
+            StartCoroutine(OpenViewer());
         }
-
-        if (!bookRoot.activeSelf) return;
-
-        if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
-            NextPage();
-
-        if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
-            PrevPage();
+        else if (viewMode)
+        {
+            StartCoroutine(CloseViewer());
+        }
     }
     
     IEnumerator OpenViewer()
@@ -81,12 +101,16 @@ public class HerbariumController : MonoBehaviour
         viewMode = true;
         player.inputLocked = true;
         darkAnimator.gameObject.SetActive(true);
+        darkAnimationFinished = false;
         darkAnimator.SetTrigger("Closing");
+        
+        yield return new WaitUntil(() => darkAnimationFinished);
 
-        yield return new WaitForSeconds(showbookdelay);
-
+        vignetteAnimator.SetActive(false);
         bookRoot.SetActive(true);
-        SetButtons(true); 
+        pawAnimator.gameObject.SetActive(false);
+        SetButtons(true);
+        currentPage = 2;
         PlayPage(GetPageClip(currentPage));
         isAnimating = false;
     }
@@ -96,12 +120,14 @@ public class HerbariumController : MonoBehaviour
         isAnimating = true;
         SetButtons(false);
         darkAnimator.gameObject.SetActive(true);
+        darkAnimationFinished = false;
         darkAnimator.SetTrigger("Closing2");
-
-        yield return new WaitForSeconds(closebookdelay);
-
-        videoPlayer.Stop();
-        videoPlayer.clip = null;
+        
+        yield return new WaitUntil(() => darkAnimationFinished);
+        
+        vignetteAnimator.SetActive(true);
+        bookVideoPlayer.Stop();
+        bookVideoPlayer.clip = null;
         bookRoot.SetActive(false);
         player.inputLocked = false;
         viewMode = false;
@@ -119,26 +145,49 @@ public class HerbariumController : MonoBehaviour
     {
         isAnimating = true;
         darkAnimator.gameObject.SetActive(true);
+        darkAnimationFinished = false;
         darkAnimator.SetTrigger("Closing");
-
-        yield return new WaitForSeconds(showbookdelay);
-
+        
+        yield return new WaitUntil(() => darkAnimationFinished);
+        
+        vignetteAnimator.SetActive(false);
         bookRoot.SetActive(true);
         SetButtons(true);
+        currentPage = 2;
         PlayPage(GetPageClip(currentPage));
         pawAnimator.gameObject.SetActive(true);
-        SetPawState(pawIndex);
+        SetPawState();
+        int trueCount = pageState.Sum(t => t ? 1 : 0);
+        if (trueCount == 4) lastHerb = true;
         isAnimating = false;
     }
     
     public void TryQuitFromClick()
     {
+        if (viewMode) return;
         if (!isAnimating 
             && currentPage == pawIndex 
             && !pageState[pawIndex]
            )
         {
             StartCoroutine(QuitBook());
+        }
+        else
+        {
+            if (failCooldown)
+                return;
+            StartCoroutine(FailCooldown());
+            audioSource.PlayOneShot(failSound);
+            if (!failAnimation1Played && Random.value < animation1Chance)
+            {
+                PlayVideo(failClip1);
+                failAnimation1Played = true;
+            }
+            else if (failAnimation1Played && !failAnimation2Played && Random.value < animation2Chance)
+            {
+                PlayVideo(failClip2);
+                failAnimation2Played = true;
+            }
         }
     }
     IEnumerator QuitBook()
@@ -147,20 +196,52 @@ public class HerbariumController : MonoBehaviour
         SetButtons(false);
         pawAnimator.Play("paw" + pawIndex + "end");
         darkAnimator.gameObject.SetActive(true);
+        darkAnimationFinished = false;
         darkAnimator.SetTrigger("Closing2");
-        yield return new WaitForSeconds(closebookdelay);
-        videoPlayer.Stop();
-        videoPlayer.clip = null;
+        
+        yield return new WaitUntil(() => darkAnimationFinished);
+        
+        vignetteAnimator.SetActive(true);
+        bookVideoPlayer.Stop();
+        bookVideoPlayer.clip = null;
+        
         bookRoot.SetActive(false);
         pawAnimator.gameObject.SetActive(false);
         pageState[pawIndex] = true;
-        player.inputLocked = false;
         isAnimating = false;
+        if (lastHerb) PlayVideo(endingClip);
+        player.inputLocked = false;
+    }
+    public void OnDark()
+    {
+        darkAnimationFinished = true;
+    }
+    IEnumerator FailCooldown()
+    {
+        failCooldown = true;
+        yield return new WaitForSeconds(failCooldownTime);
+        failCooldown = false;
     }
     
-    void SetPawState(int i)
+    void PlayVideo(VideoClip clip)
     {
-        pawAnimator.Play("paw" + i + "idle");
+        videoPlayer.gameObject.SetActive(true);
+        videoPlayer.Stop();
+        videoPlayer.clip = clip;
+        videoPlayer.Play();
+    }
+    void OnVideoFinished(VideoPlayer vp)
+    {
+        if (vp.clip == endingClip) endingImage.SetActive(true);
+
+        vp.Stop();
+        vp.clip = null;
+        vp.gameObject.SetActive(false);
+    }
+    
+    void SetPawState()
+    {
+        pawAnimator.Play("paw" + pawIndex + "idle");
     }
 
     VideoClip GetPageClip(int i)
@@ -201,38 +282,38 @@ public class HerbariumController : MonoBehaviour
     {
         if (clip == null) yield break;
 
-        videoPlayer.isLooping = false;
+        bookVideoPlayer.isLooping = false;
         
-        videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
-        videoPlayer.EnableAudioTrack(0, true);
-        videoPlayer.SetTargetAudioSource(0, audioSource);
+        bookVideoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+        bookVideoPlayer.EnableAudioTrack(0, true);
+        bookVideoPlayer.SetTargetAudioSource(0, audioSource);
         
-        videoPlayer.Stop();
-        videoPlayer.clip = clip;
-        videoPlayer.Prepare();
+        bookVideoPlayer.Stop();
+        bookVideoPlayer.clip = clip;
+        bookVideoPlayer.Prepare();
 
-        yield return new WaitUntil(() => videoPlayer.isPrepared);
+        yield return new WaitUntil(() => bookVideoPlayer.isPrepared);
 
-        videoPlayer.Play();
+        bookVideoPlayer.Play();
 
-        yield return new WaitUntil(() => videoPlayer.isPlaying);
-        yield return new WaitUntil(() => !videoPlayer.isPlaying);
+        yield return new WaitUntil(() => bookVideoPlayer.isPlaying);
+        yield return new WaitUntil(() => !bookVideoPlayer.isPlaying);
     }
 
     void PlayPage(VideoClip clip)
     {
         
-        videoPlayer.isLooping = true;
+        bookVideoPlayer.isLooping = true;
 
-        videoPlayer.Stop();
-        videoPlayer.clip = clip;
-        videoPlayer.Play();
+        bookVideoPlayer.Stop();
+        bookVideoPlayer.clip = clip;
+        bookVideoPlayer.Play();
     }
 
 
     public void NextPage()
     {
-        if (isAnimating) return;
+        if (!bookRoot.activeSelf || isAnimating) return;
         if (currentPage >= 4) return;
 
         StartCoroutine(NextRoutine());
@@ -259,7 +340,7 @@ public class HerbariumController : MonoBehaviour
 
     public void PrevPage()
     {
-        if (isAnimating) return;
+        if (!bookRoot.activeSelf || isAnimating) return;
         if (currentPage <= 0) return;
 
         StartCoroutine(PrevRoutine());

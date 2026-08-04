@@ -3,6 +3,6 @@ public class DestroyAfterAnimation : MonoBehaviour
 {
     public void DisableSelf()
     {
-        Destroy(gameObject);
+        gameObject.SetActive(false);
     }
 }

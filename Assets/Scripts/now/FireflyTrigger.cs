@@ -11,6 +11,7 @@ public class FireflyTrigger : MonoBehaviour
 
         foreach (var f in fireflies)
         {
+            f.gameObject.SetActive(true);
             f.Activate(other.transform);
         }
     }

@@ -1,47 +1,124 @@
-using UnityEngine.InputSystem;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using System.Collections;
 using System.Collections.Generic;
 
 public class GameFlow : MonoBehaviour
 {
-    [SerializeField] GameObject UIMenu;
+    [Header("Menu")]
+    [SerializeField] private GameObject UIMenu;
+    
+    [SerializeField] private GameObject engDesc;
+    [SerializeField] private GameObject ruDesc;
+    [SerializeField] private GameObject engOkButton;
+    [SerializeField] private GameObject ruOkButton;
+    
     [SerializeField] private GameObject engPlayButton;
     [SerializeField] private GameObject ruPlayButton;
     [SerializeField] private GameObject engLangButton;
     [SerializeField] private GameObject ruLangButton;
-    [SerializeField] Player player;
-    [SerializeField] float hidemenudelay=0.7f;
-    [SerializeField] float dashaDelay=3f;
-    [SerializeField] Animator animator;
+    
+    [SerializeField] private GameObject engResumeButton;
+    [SerializeField] private GameObject ruResumeButton;
+
+    [SerializeField] private Player player;
+    [SerializeField] private Animator animator;
+
+    [SerializeField] private float hidemenudelay = 0.7f;
+    [SerializeField] private float dashaDelay = 3f;
+
     [Header("Thought Chain")]
-    [SerializeField] MindTrigger mindTrigger;
-    [SerializeField] List<GameObject> thoughtImgs;
-    [SerializeField] List<GameObject> engThoughtImgs;
-    [SerializeField] GameObject mindTriggerGroup;
-    
-    private GameObject go;
-    private GameState currentState;
-    public GameState CurState => currentState;
-    
-    public enum GameState {Menu, Game}
+    [SerializeField] private MindTrigger mindTrigger;
+    [SerializeField] private List<GameObject> thoughtImgs;
+    [SerializeField] private List<GameObject> engThoughtImgs;
+    [SerializeField] private GameObject mindTriggerGroup;
 
+    private bool isTransition;
     public static bool IsRussian { get; private set; } = true;
-    void Start() => SetGameState(GameState.Menu); 
 
-    void Update()
+    public enum GameState { Menu, Desc, Game, Pause }
+
+    private GameState currentState;
+    public static GameFlow Instance { get; private set; }
+    public GameState CurrentState => currentState;
+
+    void Awake()
     {
-        if (Keyboard.current.enterKey.wasPressedThisFrame && currentState==GameState.Menu)
+        Instance = this;
+    }
+
+    void Start()
+    {
+        InputManager.Instance.EnterPressed += OnEnterPressed;
+        InputManager.Instance.SpacePressed += OnSpacePressed;
+        
+        mindTriggerGroup.SetActive(false);
+        SetGameState(GameState.Menu);
+        InputManager.Instance.IsChain = true;
+    }
+    
+    void OnEnterPressed()
+    {
+        switch (currentState)
         {
-            OnStartButton();
+            case GameState.Menu:
+                OnStartButton();
+                break;
+
+            case GameState.Desc:
+                OnOkButton();
+                break;
         }
+    }
+
+    void OnSpacePressed()
+    {
+        switch (currentState)
+        {
+            case GameState.Game:
+                Pause();
+                break;
+
+            case GameState.Pause:
+                OnResumeButton();
+                break;
+        }
+    }
+
+    void Pause()
+    {
+        currentState = GameState.Pause;
+        player.inputLocked = true;
+        UIMenu.SetActive(true);
+        ruResumeButton.SetActive(IsRussian);
+        engResumeButton.SetActive(!IsRussian);
+    }
+    
+    public void OnResumeButton()
+    {
+        currentState = GameState.Game;
+        UIMenu.SetActive(false);
+        player.inputLocked = false;
     }
 
     public void OnStartButton()
     {
+        if (isTransition)
+            return;
+
+        isTransition = true;
+        SetGameState(GameState.Desc);
+    }
+
+    public void OnOkButton()
+    {
+        if (isTransition)
+            return;
+
+        isTransition = true;
         SetGameState(GameState.Game);
     }
-    
+
     public void OnLangButton()
     {
         IsRussian = !IsRussian;
@@ -55,6 +132,19 @@ public class GameFlow : MonoBehaviour
         ruPlayButton.SetActive(IsRussian);
         ruLangButton.SetActive(IsRussian);
     }
+    private void AllOff()
+    {
+        engPlayButton.SetActive(false);
+        engLangButton.SetActive(false);
+        ruPlayButton.SetActive(false);
+        ruLangButton.SetActive(false);
+        engDesc.SetActive(false);
+        ruDesc.SetActive(false);
+        engOkButton.SetActive(false);
+        ruOkButton.SetActive(false);
+        engResumeButton.SetActive(false);
+        ruResumeButton.SetActive(false);
+    }
 
     public void OnAnimationFinished()
     {
@@ -63,46 +153,71 @@ public class GameFlow : MonoBehaviour
 
     void SetGameState(GameState state)
     {
-        currentState=state;
-        animator.gameObject.SetActive(true);
+        currentState = state;
         switch (state)
         {
             case GameState.Menu:
+                animator.gameObject.SetActive(true);
                 UIMenu.SetActive(true);
                 UpdateLanguageUI();
                 player.inputLocked = true;
                 animator.SetTrigger("Opening");
                 break;
+
+            case GameState.Desc:
+                StartCoroutine(OpenDescription());
+                break;
+
             case GameState.Game:
-                player.inputLocked = false;
-                animator.SetTrigger("Closing");
-                AudioManager.Instance.GameStart();
-                StartCoroutine(HideMenu(hidemenudelay));
-                StartCoroutine(PlayDasha(dashaDelay));
+                StartCoroutine(StartGame());
                 break;
         }
     }
 
-    IEnumerator HideMenu(float delay)
+    IEnumerator OpenDescription()
     {
-        yield return new WaitForSeconds(delay);
-        UIMenu.SetActive(false);
-    }
-    IEnumerator PlayDasha(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        AudioManager.Instance.Dasha();
-        yield return new WaitForSeconds(32f);
+        animator.gameObject.SetActive(true);
+        animator.SetTrigger("Closing");
+
+        yield return new WaitForSeconds(hidemenudelay);
         
+        AllOff();
+        ruDesc.SetActive(IsRussian);
+        ruOkButton.SetActive(IsRussian);
+        engDesc.SetActive(!IsRussian);
+        engOkButton.SetActive(!IsRussian);
+        isTransition = false;
+    }
+
+    IEnumerator StartGame()
+    {
+        animator.gameObject.SetActive(true);
+        animator.SetTrigger("Closing");
+
+        yield return new WaitForSeconds(hidemenudelay);
+
+        AllOff();
+        UIMenu.SetActive(false);
+        player.inputLocked = false;
+        AudioManager.Instance.GameStart();
+        StartCoroutine(PlayDasha());
+        isTransition = false;
+    }
+
+    IEnumerator PlayDasha()
+    {
+        yield return new WaitForSeconds(dashaDelay);
+
+        AudioManager.Instance.Dasha();
+
+        yield return new WaitForSeconds(30f);
+
         var images = IsRussian ? thoughtImgs : engThoughtImgs;
         foreach (var img in images)
         {
             yield return StartCoroutine(mindTrigger.ShowThought(img));
         }
-        
-        if (mindTriggerGroup != null)
-        {
-            mindTriggerGroup.SetActive(true);
-        }
+        InputManager.Instance.IsChain = false;
+        mindTriggerGroup.SetActive(true);
     }
 }

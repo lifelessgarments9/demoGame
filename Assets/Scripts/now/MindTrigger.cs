@@ -34,6 +34,7 @@ public class MindTrigger : MonoBehaviour
 
     IEnumerator ThoughtChain()
     {
+        InputManager.Instance.IsChain = true;
         var images = GameFlow.IsRussian ? thoughtImgs : engThoughtImgs;
         foreach (var img in images)
         {
@@ -43,22 +44,15 @@ public class MindTrigger : MonoBehaviour
             }
         }
         foreach (Transform child in mindTriggerGroup.transform) child.gameObject.SetActive(true);
+        InputManager.Instance.IsChain = false;
     }
 
     public IEnumerator ShowThought(GameObject img)
     {
         CanvasGroup cg = img.GetComponent<CanvasGroup>();
-
-        if (cg == null)
-        {
-            Debug.LogWarning($"No CanvasGroup on {img.name}");
-            yield break;
-        }
-
         img.SetActive(true);
 
         float t = 0f;
-
         cg.alpha = 0f;
 
         while (t < FadeTime)

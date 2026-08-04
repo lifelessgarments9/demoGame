@@ -15,7 +15,7 @@ public class Firefly : MonoBehaviour
     [Header("Orbit")]
     [SerializeField] private float ellipseX = 1.5f;
     [SerializeField] private float ellipseY = 0.7f;
-    [SerializeField] private float orbitYOffset = 0.5f;
+    [SerializeField] private float orbitYOffset = 10f;
 
     [Header("Random")]
     [SerializeField] private float moveNoise = 0.3f;
@@ -101,6 +101,7 @@ public class Firefly : MonoBehaviour
             {
                 transform.position = homePosition;
                 returningHome = false;
+                gameObject.SetActive(false);
             }
 
             return;

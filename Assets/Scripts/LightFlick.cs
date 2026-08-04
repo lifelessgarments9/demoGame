@@ -1,12 +1,12 @@
+using System.Collections.Generic;
 using UnityEngine;
-
 public class LightFlick : MonoBehaviour
 {
     [SerializeField] Animator darkAnimator;
     private AudioSource audioSource;
     [SerializeField] private AudioClip flick;
     private bool triggered = false;
-    [SerializeField] private bool useClosing3 = false;
+    [SerializeField] private List<string> animNames;
     private void Awake()
     {
         audioSource = GetComponent<AudioSource>();
@@ -18,10 +18,8 @@ public class LightFlick : MonoBehaviour
         {
             triggered = true;
             darkAnimator.gameObject.SetActive(true);
-            if (useClosing3) darkAnimator.SetTrigger("Closing3");
-            else darkAnimator.SetTrigger("Closing2");
+            darkAnimator.SetTrigger(animNames[Random.Range(0, animNames.Count)]);
             audioSource.PlayOneShot(flick);
         }
     }
-
 }

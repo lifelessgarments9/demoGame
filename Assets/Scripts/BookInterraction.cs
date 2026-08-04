@@ -1,43 +1,49 @@
 using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class BookInteraction : MonoBehaviour
 {
-    [SerializeField] private HerbariumController herbariumController; 
-    [SerializeField] private ExtraBook extraBook; 
+    [SerializeField] private HerbariumController herbariumController;
+    [SerializeField] private ExtraBook extraBook;
     [SerializeField] private Player player;
     [SerializeField] private int pawIndex;
     [SerializeField] private GameObject image;
-    private bool playerInside = false;
-    private bool used = false;
 
-    void Update()
+    private bool used;
+
+    void Interact()
     {
-        if (!playerInside || used) return;
+        if (used)
+            return;
 
-        if (Keyboard.current.eKey.wasPressedThisFrame&&extraBook == null)
+        used = true;
+
+        if (extraBook == null)
         {
             herbariumController.OpenBook(pawIndex);
-            player.inputLocked = true; 
-            used = true;
+            player.inputLocked = true;
         }
-        if (Keyboard.current.eKey.wasPressedThisFrame&&extraBook != null)
+        else
         {
             extraBook.OpenBook(image);
-            used = true;
         }
 
+        InputManager.Instance.InteractPressed -= Interact;
     }
-    
+
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
-            playerInside = true;
+        {
+            InputManager.Instance.InteractPressed += Interact;
+        }
+        
     }
 
     void OnTriggerExit2D(Collider2D other)
     {
         if (other.CompareTag("Player"))
-            playerInside = false;
+        {
+            InputManager.Instance.InteractPressed -= Interact;
+        }
     }
 }
