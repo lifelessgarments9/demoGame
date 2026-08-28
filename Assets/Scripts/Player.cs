@@ -27,11 +27,13 @@ public class Player : MonoBehaviour
                 footsteps.Stop();
                 footstepPlaying = false;
             }
+            if (rb.linearVelocity != Vector2.zero)
+            {
+                rb.linearVelocity = Vector2.zero;
+            }
+            return;
         }
-        else
-        {
-            HandleMovement();
-        };
+        HandleMovement();
         
     }
 
@@ -81,4 +83,21 @@ public class Player : MonoBehaviour
     {
         if (hill == h) hill = null;
     }
+    /*
+    public void LockInput()
+    {
+        isInputLocked = true;
+        rb.linearVelocity = Vector2.zero; // Один раз при блокировке
+        if (footstepPlaying)
+        {
+            footsteps.Stop();
+            footstepPlaying = false;
+        }
+    }
+
+    public void UnlockInput()
+    {
+        isInputLocked = false;
+    }
+    */
 }

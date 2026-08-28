@@ -7,6 +7,8 @@ public class Teleportation : MonoBehaviour
 {
     [SerializeField] Transform target;
     [SerializeField] CinemachineVirtualCameraBase cam;
+    [SerializeField] private GameObject[] enableChunks;
+    [SerializeField] private GameObject[] disableChunks;
 
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -24,6 +26,8 @@ public class Teleportation : MonoBehaviour
         
         rb.position = targetPos;
         rb.linearVelocity = Vector2.zero;
+        
+        ChunkActivationSystem.Instance.SetChunksVisible(enableChunks, disableChunks);
         
         cam.enabled = false;
         yield return null;

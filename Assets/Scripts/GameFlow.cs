@@ -32,12 +32,9 @@ public class GameFlow : MonoBehaviour
     [SerializeField] private List<GameObject> thoughtImgs;
     [SerializeField] private List<GameObject> engThoughtImgs;
     [SerializeField] private GameObject mindTriggerGroup;
-
     private bool isTransition;
     public static bool IsRussian { get; private set; } = true;
-
     public enum GameState { Menu, Desc, Game, Pause }
-
     private GameState currentState;
     public static GameFlow Instance { get; private set; }
     public GameState CurrentState => currentState;
@@ -161,7 +158,8 @@ public class GameFlow : MonoBehaviour
                 UIMenu.SetActive(true);
                 UpdateLanguageUI();
                 player.inputLocked = true;
-                animator.SetTrigger("Opening");
+                animator.SetTrigger("Opening2");
+                ChunkActivationSystem.Instance.InitializeChunks();
                 break;
 
             case GameState.Desc:
@@ -186,6 +184,9 @@ public class GameFlow : MonoBehaviour
         ruOkButton.SetActive(IsRussian);
         engDesc.SetActive(!IsRussian);
         engOkButton.SetActive(!IsRussian);
+        
+        yield return new WaitForSeconds(hidemenudelay);
+        
         isTransition = false;
     }
 

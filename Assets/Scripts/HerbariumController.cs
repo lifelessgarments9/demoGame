@@ -24,10 +24,10 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] private VideoClip endingClip;
     [SerializeField] private GameObject endingImage;
     [SerializeField] GameObject vignetteAnimator;
+    [SerializeField] private PlayerVisual playerVisual;
     public bool darkAnimationFinished;
     private bool failAnimation1Played = false;
     private bool failAnimation2Played = false;
-    private bool lastHerb = false;
     
     private bool failCooldown;
     [SerializeField] private float failCooldownTime = 10f;
@@ -58,7 +58,7 @@ public class HerbariumController : MonoBehaviour
     private bool isAnimating;
     private int pawIndex; //текущее растение
 
-    private bool[] pageState = new bool[5];
+    public bool[] pageState = new bool[5];
     
     private bool viewMode;
 
@@ -132,6 +132,7 @@ public class HerbariumController : MonoBehaviour
         player.inputLocked = false;
         viewMode = false;
         isAnimating = false;
+        UpdatePlayerAnimationStage();
     }
     
     public void OpenBook(int i)
@@ -157,8 +158,6 @@ public class HerbariumController : MonoBehaviour
         PlayPage(GetPageClip(currentPage));
         pawAnimator.gameObject.SetActive(true);
         SetPawState();
-        int trueCount = pageState.Sum(t => t ? 1 : 0);
-        if (trueCount == 4) lastHerb = true;
         isAnimating = false;
     }
     
@@ -209,7 +208,15 @@ public class HerbariumController : MonoBehaviour
         pawAnimator.gameObject.SetActive(false);
         pageState[pawIndex] = true;
         isAnimating = false;
-        if (lastHerb) PlayVideo(endingClip);
+        UpdatePlayerAnimationStage();
+
+        bool allHerbsCompleted = pageState.All(x => x);
+        if (allHerbsCompleted)
+        {
+            PlayVideo(endingClip);
+            yield break;
+        }
+
         player.inputLocked = false;
     }
     public void OnDark()
@@ -367,5 +374,25 @@ public class HerbariumController : MonoBehaviour
     {
         leftButton.interactable = state;
         rightButton.interactable = state;
+    }
+    
+    public void UpdatePlayerAnimationStage()
+    {
+        if (VideoPlayerWatchdog.stage2)
+        {
+            playerVisual.SetSecondAnimationSet();
+
+            VideoPlayerWatchdog.stage2 = false;
+            VideoPlayerWatchdog.stage3 = true;
+
+            return;
+        }
+        if (VideoPlayerWatchdog.stage3)
+        {
+            if (Random.value < 0.2f)
+                playerVisual.SetSecondAnimationSet();
+            else
+                playerVisual.SetFirstAnimationSet();
+        }
     }
 }

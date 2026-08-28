@@ -14,17 +14,13 @@ public class LoadingScene : MonoBehaviour
         yield return new WaitUntil(() => videoPlayer.isPrepared);
         videoPlayer.Play();
         yield return null;
-        /*
         AsyncOperation loading = SceneManager.LoadSceneAsync(gameScene);
         loading.allowSceneActivation = false;
-        
-        Debug.Log("Loading scene started");
 
         while (loading.progress < 0.9f)
             yield return null;
 
         loading.allowSceneActivation = true;
-*/
         
     }
 }
