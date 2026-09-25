@@ -6,7 +6,6 @@ using System.Collections.Generic;
 public class Sound : MonoBehaviour
 {
     [SerializeField] private List<AudioClip> sounds = new List<AudioClip>();
-
     private AudioSource audioSource;
 
     private void Awake()

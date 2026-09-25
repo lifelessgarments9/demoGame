@@ -10,6 +10,7 @@ public class LoadingScene : MonoBehaviour
 
     IEnumerator Start()
     {
+        videoPlayer.audioOutputMode = VideoAudioOutputMode.None;
         videoPlayer.Prepare();
         yield return new WaitUntil(() => videoPlayer.isPrepared);
         videoPlayer.Play();

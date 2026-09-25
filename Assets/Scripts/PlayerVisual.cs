@@ -168,4 +168,9 @@ public class PlayerVisual : MonoBehaviour
         
         currentState = null;
     }
+    public void PlayAnimation(string animationName)
+    {
+        animator.Play(animationName);
+        currentState = animationName;
+    }
 }

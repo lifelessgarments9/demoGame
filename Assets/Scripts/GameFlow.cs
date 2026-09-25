@@ -18,6 +18,9 @@ public class GameFlow : MonoBehaviour
     [SerializeField] private GameObject engLangButton;
     [SerializeField] private GameObject ruLangButton;
     
+    [SerializeField] private GameObject ruExitButton;
+    [SerializeField] private GameObject engExitButton;
+    
     [SerializeField] private GameObject engResumeButton;
     [SerializeField] private GameObject ruResumeButton;
 
@@ -33,7 +36,8 @@ public class GameFlow : MonoBehaviour
     [SerializeField] private List<GameObject> engThoughtImgs;
     [SerializeField] private GameObject mindTriggerGroup;
     private bool isTransition;
-    public static bool IsRussian { get; private set; } = true;
+    public static bool IsRussian { get; private set; } = false;
+    public static bool firstGame = true;
     public enum GameState { Menu, Desc, Game, Pause }
     private GameState currentState;
     public static GameFlow Instance { get; private set; }
@@ -89,6 +93,8 @@ public class GameFlow : MonoBehaviour
         UIMenu.SetActive(true);
         ruResumeButton.SetActive(IsRussian);
         engResumeButton.SetActive(!IsRussian);
+        engExitButton.SetActive(!IsRussian);
+        ruExitButton.SetActive(IsRussian);
     }
     
     public void OnResumeButton()
@@ -121,16 +127,24 @@ public class GameFlow : MonoBehaviour
         IsRussian = !IsRussian;
         UpdateLanguageUI();
     }
+    public void OnExitButton()
+    {
+        Application.Quit();
+    }
 
     private void UpdateLanguageUI()
     {
         engPlayButton.SetActive(!IsRussian);
         engLangButton.SetActive(!IsRussian);
+        engExitButton.SetActive(!IsRussian);
         ruPlayButton.SetActive(IsRussian);
         ruLangButton.SetActive(IsRussian);
+        ruExitButton.SetActive(IsRussian);
     }
     private void AllOff()
     {
+        engExitButton.SetActive(false);
+        ruExitButton.SetActive(false);
         engPlayButton.SetActive(false);
         engLangButton.SetActive(false);
         ruPlayButton.SetActive(false);
@@ -154,11 +168,13 @@ public class GameFlow : MonoBehaviour
         switch (state)
         {
             case GameState.Menu:
+                isTransition = true;
                 animator.gameObject.SetActive(true);
                 UIMenu.SetActive(true);
                 UpdateLanguageUI();
                 player.inputLocked = true;
                 animator.SetTrigger("Opening2");
+                StartCoroutine(Opening2Wait());
                 ChunkActivationSystem.Instance.InitializeChunks();
                 break;
 
@@ -170,6 +186,12 @@ public class GameFlow : MonoBehaviour
                 StartCoroutine(StartGame());
                 break;
         }
+    }
+    
+    IEnumerator Opening2Wait()
+    {
+        yield return new WaitForSeconds(2f);
+        isTransition = false;
     }
 
     IEnumerator OpenDescription()
@@ -201,7 +223,10 @@ public class GameFlow : MonoBehaviour
         UIMenu.SetActive(false);
         player.inputLocked = false;
         AudioManager.Instance.GameStart();
-        StartCoroutine(PlayDasha());
+        
+        if(firstGame){StartCoroutine(PlayDasha());}
+        else{mindTriggerGroup.SetActive(true);}
+        
         isTransition = false;
     }
 
@@ -216,7 +241,7 @@ public class GameFlow : MonoBehaviour
         var images = IsRussian ? thoughtImgs : engThoughtImgs;
         foreach (var img in images)
         {
-            yield return StartCoroutine(mindTrigger.ShowThought(img));
+            yield return StartCoroutine(mindTrigger.ShowThought(img, 5f,1.5f));
         }
         InputManager.Instance.IsChain = false;
         mindTriggerGroup.SetActive(true);

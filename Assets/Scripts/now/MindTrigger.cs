@@ -40,14 +40,14 @@ public class MindTrigger : MonoBehaviour
         {
             if (img != null)
             {
-                yield return ShowThought(img);
+                yield return ShowThought(img, ShowTime, FadeTime);
             }
         }
         foreach (Transform child in mindTriggerGroup.transform) child.gameObject.SetActive(true);
         InputManager.Instance.IsChain = false;
     }
 
-    public IEnumerator ShowThought(GameObject img)
+    public IEnumerator ShowThought(GameObject img, float showTime, float fadeTime)
     {
         CanvasGroup cg = img.GetComponent<CanvasGroup>();
         img.SetActive(true);
@@ -55,23 +55,23 @@ public class MindTrigger : MonoBehaviour
         float t = 0f;
         cg.alpha = 0f;
 
-        while (t < FadeTime)
+        while (t < fadeTime)
         {
             t += Time.deltaTime;
-            cg.alpha = t / FadeTime;
+            cg.alpha = t / fadeTime;
             yield return null;
         }
 
         cg.alpha = 1f;
 
-        yield return new WaitForSeconds(ShowTime);
+        yield return new WaitForSeconds(showTime);
 
         t = 0f;
 
-        while (t < FadeTime)
+        while (t < fadeTime)
         {
             t += Time.deltaTime;
-            cg.alpha = 1f - t / FadeTime;
+            cg.alpha = 1f - t / fadeTime;
             yield return null;
         }
 

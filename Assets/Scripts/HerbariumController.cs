@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using System.Collections;
-using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 using System.Linq;
 
 public class HerbariumController : MonoBehaviour
@@ -16,13 +16,18 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] Animator darkAnimator;
     [SerializeField] private Player player;
     [SerializeField] private AudioSource audioSource;
+    [SerializeField] private AudioSource endAudioSource;
     [SerializeField] private float animation1Chance = 0.4f; 
     [SerializeField] private float animation2Chance = 0.7f;
     [SerializeField] private AudioClip failSound;
+    [SerializeField] private AudioClip failSound1;
+    [SerializeField] private AudioClip failSound2;
     [SerializeField] private VideoClip failClip1;
     [SerializeField] private VideoClip failClip2;
     [SerializeField] private VideoClip endingClip;
     [SerializeField] private GameObject endingImage;
+    [SerializeField] private GameObject engResetButton;
+    [SerializeField] private GameObject ruResetButton;
     [SerializeField] GameObject vignetteAnimator;
     [SerializeField] private PlayerVisual playerVisual;
     public bool darkAnimationFinished;
@@ -65,9 +70,14 @@ public class HerbariumController : MonoBehaviour
     void Start()
     {
         videoPlayer.gameObject.SetActive(false);
+        
         videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
         videoPlayer.EnableAudioTrack(0, true);
-        videoPlayer.SetTargetAudioSource(0, audioSource);
+        videoPlayer.SetTargetAudioSource(0, endAudioSource);
+        
+        bookVideoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+        bookVideoPlayer.EnableAudioTrack(0, true);
+        bookVideoPlayer.SetTargetAudioSource(0, audioSource);
         
         bookRoot.SetActive(false);
         leftButton.onClick.AddListener(PrevPage);
@@ -109,7 +119,10 @@ public class HerbariumController : MonoBehaviour
         vignetteAnimator.SetActive(false);
         bookRoot.SetActive(true);
         pawAnimator.gameObject.SetActive(false);
-        SetButtons(true);
+        
+        leftButton.gameObject.SetActive(true);
+        rightButton.gameObject.SetActive(true);
+        
         currentPage = 2;
         PlayPage(GetPageClip(currentPage));
         isAnimating = false;
@@ -153,7 +166,10 @@ public class HerbariumController : MonoBehaviour
         
         vignetteAnimator.SetActive(false);
         bookRoot.SetActive(true);
-        SetButtons(true);
+        
+        leftButton.gameObject.SetActive(true);
+        rightButton.gameObject.SetActive(true);
+        
         currentPage = 2;
         PlayPage(GetPageClip(currentPage));
         pawAnimator.gameObject.SetActive(true);
@@ -180,11 +196,13 @@ public class HerbariumController : MonoBehaviour
             if (!failAnimation1Played && Random.value < animation1Chance)
             {
                 PlayVideo(failClip1);
+                audioSource.PlayOneShot(failSound1);
                 failAnimation1Played = true;
             }
             else if (failAnimation1Played && !failAnimation2Played && Random.value < animation2Chance)
             {
                 PlayVideo(failClip2);
+                audioSource.PlayOneShot(failSound2);
                 failAnimation2Played = true;
             }
         }
@@ -239,11 +257,31 @@ public class HerbariumController : MonoBehaviour
     }
     void OnVideoFinished(VideoPlayer vp)
     {
-        if (vp.clip == endingClip) endingImage.SetActive(true);
+        if (vp.clip == endingClip)
+        {
+            endingImage.SetActive(true);
+            var button = GameFlow.IsRussian ? ruResetButton : engResetButton;
+            button.SetActive(true);
+        }
 
         vp.Stop();
         vp.clip = null;
         vp.gameObject.SetActive(false);
+    }
+    
+    public void OnResetButton()
+    {
+        ResetGameState();
+        SceneManager.LoadScene("SampleScene");
+    }
+
+    void ResetGameState()
+    {
+        VideoPlayerWatchdog.stage2 = false;
+        VideoPlayerWatchdog.stage3 = false;
+        Furniture.gotKey = false;
+        EventSound.thoughtShown = false;
+        GameFlow.firstGame = false;
     }
     
     void SetPawState()
@@ -290,10 +328,6 @@ public class HerbariumController : MonoBehaviour
         if (clip == null) yield break;
 
         bookVideoPlayer.isLooping = false;
-        
-        bookVideoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
-        bookVideoPlayer.EnableAudioTrack(0, true);
-        bookVideoPlayer.SetTargetAudioSource(0, audioSource);
         
         bookVideoPlayer.Stop();
         bookVideoPlayer.clip = clip;
@@ -372,8 +406,14 @@ public class HerbariumController : MonoBehaviour
 
     void SetButtons(bool state)
     {
-        leftButton.interactable = state;
-        rightButton.interactable = state;
+        if (!state)
+        {
+            leftButton.gameObject.SetActive(false);
+            rightButton.gameObject.SetActive(false);
+            return;
+        }
+        leftButton.gameObject.SetActive(currentPage > 0);   
+        rightButton.gameObject.SetActive(currentPage < 4);
     }
     
     public void UpdatePlayerAnimationStage()
@@ -389,7 +429,7 @@ public class HerbariumController : MonoBehaviour
         }
         if (VideoPlayerWatchdog.stage3)
         {
-            if (Random.value < 0.2f)
+            if (Random.value < 0.4f)
                 playerVisual.SetSecondAnimationSet();
             else
                 playerVisual.SetFirstAnimationSet();
