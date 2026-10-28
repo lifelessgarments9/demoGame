@@ -16,5 +16,7 @@ public class CustomCursor : MonoBehaviour
             hotspot,
             CursorMode.Auto
         );
+        
+        Cursor.lockState = CursorLockMode.None;
     }
 }

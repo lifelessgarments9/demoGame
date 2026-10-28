@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 public class Player : MonoBehaviour
 {
     public static Player Instance { get; private set; }
@@ -11,6 +12,7 @@ public class Player : MonoBehaviour
     public bool inputLocked = false;
     bool footstepPlaying=false;
     private Hill hill;
+    [SerializeField] private List<AudioClip> footstepClips = new List<AudioClip>();
     private void Awake()
     {
         Instance = this;
@@ -60,6 +62,7 @@ public class Player : MonoBehaviour
             rb.MovePosition(rb.position + vector * speed * Time.fixedDeltaTime);
             if (!footstepPlaying)
             {
+                footsteps.clip = footstepClips[Random.Range(0, footstepClips.Count)];
                 footsteps.Play();
                 footstepPlaying = true;
             }
@@ -83,21 +86,4 @@ public class Player : MonoBehaviour
     {
         if (hill == h) hill = null;
     }
-    /*
-    public void LockInput()
-    {
-        isInputLocked = true;
-        rb.linearVelocity = Vector2.zero; // Один раз при блокировке
-        if (footstepPlaying)
-        {
-            footsteps.Stop();
-            footstepPlaying = false;
-        }
-    }
-
-    public void UnlockInput()
-    {
-        isInputLocked = false;
-    }
-    */
 }

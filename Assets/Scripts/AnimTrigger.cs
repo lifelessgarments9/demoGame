@@ -26,6 +26,7 @@ public class AnimTrigger : MonoBehaviour
     
     IEnumerator ShowVideo()
     {
+        AudioManager.Instance.StopBackgroundMusic();
         audioSource.Play();
         darkAnimator.gameObject.SetActive(true);
         darkAnimator.SetTrigger("Closing");
@@ -45,5 +46,7 @@ public class AnimTrigger : MonoBehaviour
         videoPlayer.gameObject.SetActive(false);
         darkAnimator.SetTrigger("Opening");
         player.inputLocked = false;
+        yield return new WaitForSeconds(10f);
+        AudioManager.Instance.BackgroundMusic();
     }
 }

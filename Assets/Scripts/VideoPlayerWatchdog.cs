@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Video;
+using System.Collections;
 
 public class VideoPlayerWatchdog : MonoBehaviour
 {
@@ -37,7 +38,18 @@ public class VideoPlayerWatchdog : MonoBehaviour
         if(minutes==stage1Minutes) hideObjects.SetActive(true);
         if(minutes==entityMinutes) entityObjects.SetActive(true);
 		if(minutes==stage2Minutes) stage2=true;
+        
+        StartCoroutine(RestartVideoRoutine());
+    }
 
+    IEnumerator RestartVideoRoutine()
+    {
+        videoPlayer.Stop();
+        videoPlayer.gameObject.SetActive(false);
+        yield return null; 
+        videoPlayer.gameObject.SetActive(true);
+        videoPlayer.Prepare();
+        yield return new WaitUntil(() => videoPlayer.isPrepared);
         videoPlayer.Play();
     }
 

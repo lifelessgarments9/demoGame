@@ -27,8 +27,6 @@ public class Teleportation : MonoBehaviour
         rb.position = targetPos;
         rb.linearVelocity = Vector2.zero;
         
-        ChunkActivationSystem.Instance.SetChunksVisible(enableChunks, disableChunks);
-        
         cam.enabled = false;
         yield return null;
         cam.enabled = true;

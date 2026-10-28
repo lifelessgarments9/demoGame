@@ -195,13 +195,13 @@ public class HerbariumController : MonoBehaviour
             audioSource.PlayOneShot(failSound);
             if (!failAnimation1Played && Random.value < animation1Chance)
             {
-                PlayVideo(failClip1);
+                PlayVideo(failClip1,10f);
                 audioSource.PlayOneShot(failSound1);
                 failAnimation1Played = true;
             }
             else if (failAnimation1Played && !failAnimation2Played && Random.value < animation2Chance)
             {
-                PlayVideo(failClip2);
+                PlayVideo(failClip2,10f);
                 audioSource.PlayOneShot(failSound2);
                 failAnimation2Played = true;
             }
@@ -231,7 +231,7 @@ public class HerbariumController : MonoBehaviour
         bool allHerbsCompleted = pageState.All(x => x);
         if (allHerbsCompleted)
         {
-            PlayVideo(endingClip);
+            PlayVideo(endingClip,-1f);
             yield break;
         }
 
@@ -248,12 +248,23 @@ public class HerbariumController : MonoBehaviour
         failCooldown = false;
     }
     
-    void PlayVideo(VideoClip clip)
+    void PlayVideo(VideoClip clip, float musicReturnDelay)
     {
+        AudioManager.Instance.StopBackgroundMusic();
         videoPlayer.gameObject.SetActive(true);
         videoPlayer.Stop();
         videoPlayer.clip = clip;
         videoPlayer.Play();
+        if (musicReturnDelay >= 0f)
+        if (musicReturnDelay >= 0f)
+        {
+            StartCoroutine(ReturnMusicAfterDelay(musicReturnDelay));
+        }
+    }
+    IEnumerator ReturnMusicAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        AudioManager.Instance.BackgroundMusic();
     }
     void OnVideoFinished(VideoPlayer vp)
     {

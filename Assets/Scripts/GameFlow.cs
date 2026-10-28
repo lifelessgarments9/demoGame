@@ -224,8 +224,7 @@ public class GameFlow : MonoBehaviour
         player.inputLocked = false;
         AudioManager.Instance.GameStart();
         
-        if(firstGame){StartCoroutine(PlayDasha());}
-        else{mindTriggerGroup.SetActive(true);}
+        StartCoroutine(PlayDasha());
         
         isTransition = false;
     }
@@ -233,10 +232,13 @@ public class GameFlow : MonoBehaviour
     IEnumerator PlayDasha()
     {
         yield return new WaitForSeconds(dashaDelay);
-
-        AudioManager.Instance.Dasha();
-
-        yield return new WaitForSeconds(30f);
+        if(firstGame)
+        {
+            AudioManager.Instance.Dasha();
+            yield return new WaitForSeconds(30f);
+        }
+        
+        AudioManager.Instance.BackgroundMusic();
 
         var images = IsRussian ? thoughtImgs : engThoughtImgs;
         foreach (var img in images)
