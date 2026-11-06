@@ -18,14 +18,14 @@ public class ExtraBook : MonoBehaviour
     private bool canClose;
     private GameObject currentImage;
     
-    public void OpenBook(GameObject image)
+    public void OpenBook(GameObject image, string startAnimName = null)
     {
         if (routine != null) return;
         currentImage = image;
-        routine = StartCoroutine(BookRoutine());
+        routine = StartCoroutine(BookRoutine(startAnimName));
     }
 
-    IEnumerator BookRoutine()
+    IEnumerator BookRoutine(string startAnimName)
     {
         canClose = false;
         closeButtonCanvasGroup.alpha = 0f;
@@ -41,7 +41,11 @@ public class ExtraBook : MonoBehaviour
         currentImage.SetActive(true);
         closeButton.SetActive(true);
         vignetteAnimator.SetActive(false);
-        
+        if (!string.IsNullOrEmpty(startAnimName))
+        {
+            Animator anim = currentImage.GetComponent<Animator>();
+            if (anim != null) anim.Play(startAnimName, 0, 0f);
+        }
         yield return new WaitForSeconds(showTime);
         
         yield return StartCoroutine(FadeInCloseButton());

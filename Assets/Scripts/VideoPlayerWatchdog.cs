@@ -19,11 +19,20 @@ public class VideoPlayerWatchdog : MonoBehaviour
 
     void Start()
     {
-        stage1Minutes= Random.Range(2, 6);
-        entityMinutes= Random.Range(5, 10);
-        stage2Minutes= Random.Range(9, 14);
-        // 7min-10 10-18 18-25
-        //3-5 5-9 9-13
+        if (GameFlow.firstGame)
+        {
+            stage1Minutes= Random.Range(2, 5);
+            entityMinutes= Random.Range(5, 7);
+            stage2Minutes= Random.Range(10, 14);
+            // 7min-10 10-15 18-25
+            //3-5 5-9 9-13
+        }
+        else
+        {
+            stage1Minutes= 1;
+            entityMinutes= 1;
+            stage2Minutes= 1;
+        }
     }
 
     void Update()
@@ -35,6 +44,7 @@ public class VideoPlayerWatchdog : MonoBehaviour
 
         timer = 0f;
 		minutes+=1;
+        
         if(minutes==stage1Minutes) hideObjects.SetActive(true);
         if(minutes==entityMinutes) entityObjects.SetActive(true);
 		if(minutes==stage2Minutes) stage2=true;

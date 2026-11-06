@@ -29,6 +29,9 @@ public class Furniture : MonoBehaviour, IPointerClickHandler
     private bool triggered;
     private bool opened;
     public static bool gotKey;
+    [SerializeField] private string[] furnBookAnimations = { "bookAnim1", "bookAnim2", "bookAnim3" };
+    public static int currentBookAnimIndex = 0;
+    private Animator anim;
     
 
     private void Start()
@@ -36,6 +39,7 @@ public class Furniture : MonoBehaviour, IPointerClickHandler
         audioSource = GetComponent<AudioSource>();
         furnitureOpened.SetActive(false);
         teapotAnimator.gameObject.SetActive(false);
+        anim = furnBook.GetComponent<Animator>();
     }
 
     public void OnPointerClick(PointerEventData eventData)
@@ -43,7 +47,7 @@ public class Furniture : MonoBehaviour, IPointerClickHandler
         if (opened)
         {
             opened = false;
-            extraBook.OpenBook(furnBook);
+            extraBook.OpenBook(furnBook, furnBookAnimations[currentBookAnimIndex]);
             return;
         }
         if(soundOnCooldown) return;

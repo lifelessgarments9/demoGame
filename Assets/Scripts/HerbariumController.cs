@@ -5,6 +5,7 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 using System.Linq;
 
+
 public class HerbariumController : MonoBehaviour
 {
     [SerializeField] GameObject bookRoot;
@@ -30,6 +31,9 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] private GameObject ruResetButton;
     [SerializeField] GameObject vignetteAnimator;
     [SerializeField] private PlayerVisual playerVisual;
+    [SerializeField] private MindTrigger mindTrigger;
+    [SerializeField] private GameObject ruThought;
+    [SerializeField] private GameObject engThought;
     public bool darkAnimationFinished;
     private bool failAnimation1Played = false;
     private bool failAnimation2Played = false;
@@ -175,6 +179,12 @@ public class HerbariumController : MonoBehaviour
         pawAnimator.gameObject.SetActive(true);
         SetPawState();
         isAnimating = false;
+        if(GameFlow.firstGame)
+        {
+            GameFlow.firstGame = false;
+            var image = GameFlow.IsRussian ? ruThought : engThought;
+            StartCoroutine(mindTrigger.ShowThought(image, 5f,3f));
+        }
     }
     
     public void TryQuitFromClick()
@@ -232,6 +242,7 @@ public class HerbariumController : MonoBehaviour
         if (allHerbsCompleted)
         {
             PlayVideo(endingClip,-1f);
+            AudioManager.Instance.StopAmbientSource();
             yield break;
         }
 
@@ -273,6 +284,7 @@ public class HerbariumController : MonoBehaviour
             endingImage.SetActive(true);
             var button = GameFlow.IsRussian ? ruResetButton : engResetButton;
             button.SetActive(true);
+            AudioManager.Instance.ResumeAmbientSource();
         }
 
         vp.Stop();
@@ -293,6 +305,7 @@ public class HerbariumController : MonoBehaviour
         Furniture.gotKey = false;
         EventSound.thoughtShown = false;
         GameFlow.firstGame = false;
+        Furniture.currentBookAnimIndex = (Furniture.currentBookAnimIndex + 1) % 3;
     }
     
     void SetPawState()

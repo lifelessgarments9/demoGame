@@ -13,6 +13,10 @@ public class InputManager : MonoBehaviour
     public event Action LeftPressed;
     public event Action RightPressed;
     public bool IsChain;
+    [SerializeField] private float bookPressCooldown = 3f;
+    [SerializeField] private float interactCooldown = 2f;
+    private float nextBookPressTime= 0f;
+    private float nextInteractTime = 0f;
 
     void Awake()
     {
@@ -32,11 +36,19 @@ public class InputManager : MonoBehaviour
         
         if (IsChain) return;
 
-        if (Keyboard.current.eKey.wasPressedThisFrame)
+        if (Keyboard.current.eKey.wasPressedThisFrame &&
+            Time.unscaledTime >= nextInteractTime)
+        {
+            nextInteractTime = Time.unscaledTime + interactCooldown;
             InteractPressed?.Invoke();
+        }
 
-        if (Keyboard.current.bKey.wasPressedThisFrame)
+        if (Keyboard.current.bKey.wasPressedThisFrame &&
+            Time.unscaledTime >= nextBookPressTime)
+        {
+            nextBookPressTime = Time.unscaledTime + bookPressCooldown;
             BookPressed?.Invoke();
+        }
 
         if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
             LeftPressed?.Invoke();

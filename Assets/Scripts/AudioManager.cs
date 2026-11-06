@@ -18,6 +18,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private float fadeDuration = 1.5f;
     AudioClip clip;
     private Coroutine musicRoutine;
+    private Coroutine musicFadeRoutine;
+    private Coroutine ambientFadeRoutine;
 
     private void Awake()
     {
@@ -47,28 +49,68 @@ public class AudioManager : MonoBehaviour
             StopCoroutine(musicRoutine);
             musicRoutine = null;
         }
+        if (musicFadeRoutine != null)
+            StopCoroutine(musicFadeRoutine);
     
         if (musicSource != null && musicSource.isPlaying)
         {
-            StartCoroutine(FadeOutRoutine());
+            musicFadeRoutine = StartCoroutine(
+                FadeOutRoutine(musicSource, () => musicFadeRoutine = null)
+            );        
         }
     }
-
-    private IEnumerator FadeOutRoutine()
+    public void StopAmbientSource()
     {
-        float startVolume = musicSource.volume;
+        if (ambientSource != null && ambientSource.isPlaying)
+        {
+            StartCoroutine(
+                FadeOutRoutine(ambientSource, () => ambientFadeRoutine = null)
+            );
+        }
+    }
+    public void ResumeAmbientSource()
+    {
+        ambientSource.volume = 0f;
+        ambientSource.Play();
+        ambientFadeRoutine = StartCoroutine(
+            FadeInRoutine(() => ambientFadeRoutine = null)
+        );
+    }
+    private IEnumerator FadeInRoutine(System.Action onComplete = null)
+    {
+        float startVolume = ambientSource.volume;
         float timer = 0f;
     
         while (timer < fadeDuration)
         {
-            timer += Time.unscaledDeltaTime; 
-            musicSource.volume = Mathf.Lerp(startVolume, 0f, timer / fadeDuration);
+            timer += Time.unscaledDeltaTime;
+            ambientSource.volume = Mathf.Lerp(startVolume, 1f, timer / fadeDuration);
             yield return null;
         }
-    
-        musicSource.volume = 0f;
-        musicSource.Stop();
-        musicSource.volume = startVolume; 
+        ambientSource.volume = 1f;
+        onComplete?.Invoke();
+    }
+
+    private IEnumerator FadeOutRoutine(AudioSource source, System.Action onComplete = null)
+    {
+        if (source == null)
+            yield break;
+
+        float startVolume = source.volume;
+        float timer = 0f;
+
+        while (timer < fadeDuration)
+        {
+            timer += Time.unscaledDeltaTime;
+            source.volume = Mathf.Lerp(startVolume, 0f, timer / fadeDuration);
+            yield return null;
+        }
+
+        source.volume = 0f;
+        source.Stop();
+        source.volume = startVolume;
+
+        onComplete?.Invoke();
     }
 
     private IEnumerator MusicLoop()
@@ -86,7 +128,7 @@ public class AudioManager : MonoBehaviour
             musicSource.clip = clip;
             musicSource.Play();
             yield return new WaitWhile(() => musicSource.isPlaying);
-            yield return new WaitForSeconds(Random.Range(1, 90));
+            yield return new WaitForSeconds(Random.Range(10, 100));
         }
     }
     

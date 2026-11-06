@@ -85,21 +85,30 @@ public class GameFlow : MonoBehaviour
                 break;
         }
     }
-
     void Pause()
     {
+        if (currentState != GameState.Game)
+            return;
+
         currentState = GameState.Pause;
+        Time.timeScale = 0f;
+
         player.inputLocked = true;
         UIMenu.SetActive(true);
+
         ruResumeButton.SetActive(IsRussian);
         engResumeButton.SetActive(!IsRussian);
         engExitButton.SetActive(!IsRussian);
         ruExitButton.SetActive(IsRussian);
     }
-    
     public void OnResumeButton()
     {
+        if (currentState != GameState.Pause)
+            return;
+
+        Time.timeScale = 1f;
         currentState = GameState.Game;
+
         UIMenu.SetActive(false);
         player.inputLocked = false;
     }
@@ -236,15 +245,14 @@ public class GameFlow : MonoBehaviour
         {
             AudioManager.Instance.Dasha();
             yield return new WaitForSeconds(30f);
+            var images = IsRussian ? thoughtImgs : engThoughtImgs;
+            foreach (var img in images)
+            {
+                yield return StartCoroutine(mindTrigger.ShowThought(img, 5f,1.5f));
+            }
         }
         
         AudioManager.Instance.BackgroundMusic();
-
-        var images = IsRussian ? thoughtImgs : engThoughtImgs;
-        foreach (var img in images)
-        {
-            yield return StartCoroutine(mindTrigger.ShowThought(img, 5f,1.5f));
-        }
         InputManager.Instance.IsChain = false;
         mindTriggerGroup.SetActive(true);
     }

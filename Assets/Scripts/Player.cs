@@ -71,6 +71,7 @@ public class Player : MonoBehaviour
         {
             if (footstepPlaying)
             {
+                rb.linearVelocity = Vector2.zero;
                 footsteps.Stop();
                 footstepPlaying = false;
             }
