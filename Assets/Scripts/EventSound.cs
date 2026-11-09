@@ -38,7 +38,7 @@ public class EventSound : MonoBehaviour
             myCollider.enabled = false;
             if (entity)
             {
-                StartCoroutine(StartTimer());
+                //StartCoroutine(StartTimer());
                 if (!thoughtShown)
                 {
                     thoughtShown = true;
@@ -48,11 +48,11 @@ public class EventSound : MonoBehaviour
             audioSource.PlayOneShot(sound);
         }
     }
+    /*
     private IEnumerator StartTimer()
     {
         SetOtherEventsBlocked(true);
         timer.gameObject.SetActive(true);
-        
         timerArrow.localRotation = Quaternion.identity;
         float elapsed = 0f;
         while (elapsed < delay)
@@ -75,6 +75,7 @@ public class EventSound : MonoBehaviour
             if (!eventSound.isUsed) eventSound.myCollider.enabled = !blocked;
         }
     }
+    */
 
     IEnumerator ThoughtDelay()
     {

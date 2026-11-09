@@ -64,6 +64,7 @@ public class HerbariumController : MonoBehaviour
     [SerializeField] ReverseTurnSet[] revturns; // 4
     
     private int currentPage = 2;
+    private VideoClip currentPageClip; 
     private bool isAnimating;
     private int pawIndex; //текущее растение
 
@@ -96,7 +97,9 @@ public class HerbariumController : MonoBehaviour
     
     void OnBookPressed()
     {
-        if (isAnimating)
+        if (isAnimating) return;
+        
+        if (!bookRoot.activeSelf && InputManager.IsInUI)
             return;
 
         if (!bookRoot.activeSelf)
@@ -112,6 +115,7 @@ public class HerbariumController : MonoBehaviour
     IEnumerator OpenViewer()
     {
         isAnimating = true;
+        InputManager.IsInUI = true;
         viewMode = true;
         player.inputLocked = true;
         darkAnimator.gameObject.SetActive(true);
@@ -150,13 +154,16 @@ public class HerbariumController : MonoBehaviour
         viewMode = false;
         isAnimating = false;
         UpdatePlayerAnimationStage();
+        InputManager.IsInUI = false;
     }
     
-    public void OpenBook(int i)
+    public bool OpenBook(int i)
     {
-        if (isAnimating) return;
+        if (isAnimating || InputManager.IsInUI) return false;
+        InputManager.IsInUI = true;
         pawIndex = i;
         StartCoroutine(OpenBookCoroutine());
+        return true;
     }
 
     IEnumerator OpenBookCoroutine()
@@ -189,11 +196,8 @@ public class HerbariumController : MonoBehaviour
     
     public void TryQuitFromClick()
     {
-        if (viewMode) return;
-        if (!isAnimating 
-            && currentPage == pawIndex 
-            && !pageState[pawIndex]
-           )
+        if (isAnimating || viewMode) return;
+        if (currentPage == pawIndex && !pageState[pawIndex])
         {
             StartCoroutine(QuitBook());
         }
@@ -205,13 +209,13 @@ public class HerbariumController : MonoBehaviour
             audioSource.PlayOneShot(failSound);
             if (!failAnimation1Played && Random.value < animation1Chance)
             {
-                PlayVideo(failClip1,10f);
+                PlayVideo(failClip1,8f);
                 audioSource.PlayOneShot(failSound1);
                 failAnimation1Played = true;
             }
             else if (failAnimation1Played && !failAnimation2Played && Random.value < animation2Chance)
             {
-                PlayVideo(failClip2,10f);
+                PlayVideo(failClip2,8f);
                 audioSource.PlayOneShot(failSound2);
                 failAnimation2Played = true;
             }
@@ -237,6 +241,7 @@ public class HerbariumController : MonoBehaviour
         pageState[pawIndex] = true;
         isAnimating = false;
         UpdatePlayerAnimationStage();
+        InputManager.IsInUI = false;
 
         bool allHerbsCompleted = pageState.All(x => x);
         if (allHerbsCompleted)
@@ -262,6 +267,9 @@ public class HerbariumController : MonoBehaviour
     void PlayVideo(VideoClip clip, float musicReturnDelay)
     {
         AudioManager.Instance.StopBackgroundMusic();
+        currentPageClip = bookVideoPlayer.clip;
+        bookVideoPlayer.gameObject.SetActive(false); 
+        
         videoPlayer.gameObject.SetActive(true);
         videoPlayer.Stop();
         videoPlayer.clip = clip;
@@ -269,13 +277,19 @@ public class HerbariumController : MonoBehaviour
         if (musicReturnDelay >= 0f)
         if (musicReturnDelay >= 0f)
         {
-            StartCoroutine(ReturnMusicAfterDelay(musicReturnDelay));
+            StartCoroutine(ResumeAfterFail(musicReturnDelay));
         }
     }
-    IEnumerator ReturnMusicAfterDelay(float delay)
+    IEnumerator ResumeAfterFail(float delay)
     {
         yield return new WaitForSeconds(delay);
         AudioManager.Instance.BackgroundMusic();
+        if (currentPageClip != null)
+        {
+            bookVideoPlayer.gameObject.SetActive(true);
+            bookVideoPlayer.clip = currentPageClip;
+            bookVideoPlayer.Play();
+        }
     }
     void OnVideoFinished(VideoPlayer vp)
     {
@@ -305,6 +319,7 @@ public class HerbariumController : MonoBehaviour
         Furniture.gotKey = false;
         EventSound.thoughtShown = false;
         GameFlow.firstGame = false;
+        InputManager.IsInUI = false;
         Furniture.currentBookAnimIndex = (Furniture.currentBookAnimIndex + 1) % 3;
     }
     
@@ -352,15 +367,25 @@ public class HerbariumController : MonoBehaviour
         if (clip == null) yield break;
 
         bookVideoPlayer.isLooping = false;
-        
         bookVideoPlayer.Stop();
         bookVideoPlayer.clip = clip;
         bookVideoPlayer.Prepare();
-
-        yield return new WaitUntil(() => bookVideoPlayer.isPrepared);
-
+        
+        //обработка Prepare
+        float timeout = 5f; 
+        float elapsed = 0f;
+        while (!bookVideoPlayer.isPrepared && elapsed < timeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+        if (!bookVideoPlayer.isPrepared)
+        {
+            bookVideoPlayer.clip = null;
+            yield break; 
+        }
+        
         bookVideoPlayer.Play();
-
         yield return new WaitUntil(() => bookVideoPlayer.isPlaying);
         yield return new WaitUntil(() => !bookVideoPlayer.isPlaying);
     }
@@ -458,5 +483,14 @@ public class HerbariumController : MonoBehaviour
             else
                 playerVisual.SetFirstAnimationSet();
         }
+    }
+    
+    private void OnDestroy()
+    {
+        if (InputManager.Instance == null) return;
+
+        InputManager.Instance.BookPressed -= OnBookPressed;
+        InputManager.Instance.LeftPressed -= NextPage;
+        InputManager.Instance.RightPressed -= PrevPage;
     }
 }

@@ -6,13 +6,13 @@ public class ClickCursor : MonoBehaviour, IPointerEnterHandler,IPointerExitHandl
     
     public void OnPointerEnter(PointerEventData eventData)
     {
-        if (used) return;
+        if(InputManager.IsInUI) return;
         CustomCursor.SetClickCursor();
     }
 
     public void OnPointerExit(PointerEventData eventData)
     {
-        if (used) return;
+        if(InputManager.IsInUI) return;
         CustomCursor.SetNormalCursor();
     }
 }

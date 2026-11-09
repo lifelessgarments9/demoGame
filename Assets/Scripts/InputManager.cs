@@ -13,13 +13,19 @@ public class InputManager : MonoBehaviour
     public event Action LeftPressed;
     public event Action RightPressed;
     public bool IsChain;
-    [SerializeField] private float bookPressCooldown = 3f;
-    [SerializeField] private float interactCooldown = 2f;
-    private float nextBookPressTime= 0f;
-    private float nextInteractTime = 0f;
+    public static bool IsInUI { get; set; } = false;
 
+    
+    [SerializeField] private float bookPressCooldown = 3f;
+    private float nextBookPressTime= 0f;
+    
     void Awake()
     {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
     }
 
@@ -35,25 +41,24 @@ public class InputManager : MonoBehaviour
             return;
         
         if (IsChain) return;
+        
+        if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
+            LeftPressed?.Invoke();
 
-        if (Keyboard.current.eKey.wasPressedThisFrame &&
-            Time.unscaledTime >= nextInteractTime)
-        {
-            nextInteractTime = Time.unscaledTime + interactCooldown;
-            InteractPressed?.Invoke();
-        }
-
+        if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
+            RightPressed?.Invoke();
+        
         if (Keyboard.current.bKey.wasPressedThisFrame &&
             Time.unscaledTime >= nextBookPressTime)
         {
             nextBookPressTime = Time.unscaledTime + bookPressCooldown;
             BookPressed?.Invoke();
         }
+        
+        if (IsInUI) return; 
 
-        if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
-            LeftPressed?.Invoke();
-
-        if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
-            RightPressed?.Invoke();
+        if (Keyboard.current.eKey.wasPressedThisFrame)
+            InteractPressed?.Invoke();
+        
     }
 }

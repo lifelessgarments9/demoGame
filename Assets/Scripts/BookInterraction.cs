@@ -1,5 +1,7 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System.Collections.Generic;
 
 public class BookInteraction : MonoBehaviour
 {
@@ -8,26 +10,27 @@ public class BookInteraction : MonoBehaviour
     [SerializeField] private Player player;
     [SerializeField] private int pawIndex;
     [SerializeField] private GameObject image;
-
+    [SerializeField] private GameObject eButton;
+    [SerializeField] private float cooldown = 8f;
+    [SerializeField] private MindTrigger mindTrigger;
+    private bool onCooldown;
     private bool used;
 
     void Interact()
     {
-        if (used)
-            return;
-
-        used = true;
-
+        bool opened;
         if (extraBook == null)
         {
-            herbariumController.OpenBook(pawIndex);
-            player.inputLocked = true;
+            opened = herbariumController.OpenBook(pawIndex);
+            if (opened) player.inputLocked = true;
         }
         else
         {
-            extraBook.OpenBook(image);
+            opened = extraBook.OpenBook(image);
         }
-
+        
+        if (!opened) return;
+        used = true;
         InputManager.Instance.InteractPressed -= Interact;
     }
 
@@ -35,7 +38,11 @@ public class BookInteraction : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            if (used) return;
             InputManager.Instance.InteractPressed += Interact;
+            if(onCooldown) return;
+            StartCoroutine(SetCooldown());
+            StartCoroutine(mindTrigger.ShowThought(eButton, 0.5f, 1f));
         }
         
     }
@@ -46,5 +53,15 @@ public class BookInteraction : MonoBehaviour
         {
             InputManager.Instance.InteractPressed -= Interact;
         }
+    }
+    private IEnumerator SetCooldown()
+    {
+        onCooldown = true;
+        yield return new WaitForSeconds(cooldown);
+        onCooldown = false;
+    }
+    private void OnDisable()
+    {
+        if (InputManager.Instance != null) InputManager.Instance.InteractPressed -= Interact;
     }
 }

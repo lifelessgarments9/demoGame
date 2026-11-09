@@ -10,6 +10,8 @@ public class Hide : MonoBehaviour
     [SerializeField] private Transform vignette;
     [SerializeField] private CanvasGroup darkness;
     [SerializeField] private Slider knob;
+    [SerializeField] private GameObject hint;
+    [SerializeField] private MindTrigger mindTrigger;
 
     [Header("Settings")]
     [SerializeField] private float lowScale = 0.5f;
@@ -18,12 +20,19 @@ public class Hide : MonoBehaviour
     [Header("Audio")]
     [SerializeField] private List<AudioClip> lampSounds = new List<AudioClip>();
     [SerializeField] private float soundCooldown = 10f;
+    
+    [SerializeField] private float scaryChance = 0.3f;
+    [SerializeField] private Rigidbody2D rb;
+    [SerializeField] private List<Transform> targets = new List<Transform>();
+    [SerializeField] private Teleportation teleportation;
+    private bool scaryTriggered;
 
     private AudioSource audioSource;
     private Vector3 startScale;
     private Coroutine returnRoutine;
     private bool soundOnCooldown;
     private bool playerInside;
+    public static bool hintShown = false; 
 
     private void Start()
     {
@@ -96,14 +105,26 @@ public class Hide : MonoBehaviour
 
             StartCoroutine(SoundCooldown());
         }
+
+        if (!hintShown&&value >= knob.maxValue * 0.90f)
+        {
+            hintShown = true;
+            StartCoroutine(mindTrigger.ShowThought(hint, 4f, 1.5f));
+        }
+        if (!scaryTriggered&&value >= knob.maxValue * 0.90f)
+        {
+            scaryTriggered = true; 
+            if (Random.value <= scaryChance)
+            {
+                teleportation.ExternTeleport(rb,targets[Random.Range(0, targets.Count)]);
+            }
+        }
     }
 
     private IEnumerator SoundCooldown()
     {
         soundOnCooldown = true;
-
         yield return new WaitForSeconds(soundCooldown);
-
         soundOnCooldown = false;
     }
 

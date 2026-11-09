@@ -7,8 +7,6 @@ public class Teleportation : MonoBehaviour
 {
     [SerializeField] Transform target;
     [SerializeField] CinemachineVirtualCameraBase cam;
-    [SerializeField] private GameObject[] enableChunks;
-    [SerializeField] private GameObject[] disableChunks;
 
     void OnTriggerEnter2D(Collider2D other)
     {
@@ -16,6 +14,12 @@ public class Teleportation : MonoBehaviour
         {
             StartCoroutine(Teleport(other.gameObject.GetComponent<Rigidbody2D>()));
         }
+    }
+
+    public void ExternTeleport(Rigidbody2D rb, Transform t)
+    {
+        target = t;
+        StartCoroutine(Teleport(rb));
     }
 
     IEnumerator Teleport(Rigidbody2D rb)

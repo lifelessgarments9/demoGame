@@ -10,29 +10,24 @@ public class Player : MonoBehaviour
     [SerializeField] float speed = 5f;
     private Rigidbody2D rb;
     public bool inputLocked = false;
-    bool footstepPlaying=false;
     private Hill hill;
-    [SerializeField] private List<AudioClip> footstepClips = new List<AudioClip>();
+    private bool footstepsStarted;
     private void Awake()
     {
         Instance = this;
         rb = GetComponent<Rigidbody2D>();
         footsteps=GetComponent<AudioSource>();
+        footsteps.loop = true; 
+        footsteps.playOnAwake = false;
     }
 
     private void FixedUpdate()
     {
         if (inputLocked)
         {
-            if (footstepPlaying)
-            {
-                footsteps.Stop();
-                footstepPlaying = false;
-            }
-            if (rb.linearVelocity != Vector2.zero)
-            {
-                rb.linearVelocity = Vector2.zero;
-            }
+            IsMoving = false;
+            if (footsteps.isPlaying) footsteps.Pause();
+            rb.linearVelocity = Vector2.zero;
             return;
         }
         HandleMovement();
@@ -60,21 +55,16 @@ public class Player : MonoBehaviour
             if (hill != null) vector = hill.ModifyDirection(rb.position, vector);
             LastMoveDir = vector;
             rb.MovePosition(rb.position + vector * speed * Time.fixedDeltaTime);
-            if (!footstepPlaying)
+            if (!footstepsStarted)
             {
-                footsteps.clip = footstepClips[Random.Range(0, footstepClips.Count)];
                 footsteps.Play();
-                footstepPlaying = true;
+                footstepsStarted = true;
             }
+            else if (!footsteps.isPlaying) footsteps.UnPause();
         }
         else
         {
-            if (footstepPlaying)
-            {
-                rb.linearVelocity = Vector2.zero;
-                footsteps.Stop();
-                footstepPlaying = false;
-            }
+            if (footsteps.isPlaying) footsteps.Pause();
         }
         
     }

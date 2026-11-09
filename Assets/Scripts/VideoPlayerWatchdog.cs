@@ -21,11 +21,10 @@ public class VideoPlayerWatchdog : MonoBehaviour
     {
         if (GameFlow.firstGame)
         {
-            stage1Minutes= Random.Range(2, 5);
-            entityMinutes= Random.Range(5, 7);
-            stage2Minutes= Random.Range(10, 14);
-            // 7min-10 10-15 18-25
-            //3-5 5-9 9-13
+            stage1Minutes= Random.Range(2, 3);
+            entityMinutes= Random.Range(3, 5);
+            stage2Minutes= Random.Range(6, 12);
+            //4-6 6-10 12-24
         }
         else
         {

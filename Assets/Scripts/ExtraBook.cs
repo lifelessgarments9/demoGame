@@ -14,18 +14,29 @@ public class ExtraBook : MonoBehaviour
     [SerializeField] private CanvasGroup closeButtonCanvasGroup;
     [SerializeField] private float buttonFadeDuration = 1f;
     
+    private ImagePanController imagePan;
+    
     private Coroutine routine;
     private bool canClose;
     private GameObject currentImage;
     
-    public void OpenBook(GameObject image, string startAnimName = null)
+    public bool OpenBook(GameObject image, string startAnimName = null,bool viewmode=false)
+    {
+        if (routine != null) return false;
+        currentImage = image;
+        InputManager.IsInUI = true;
+        routine = StartCoroutine(BookRoutine(startAnimName,viewmode));
+        return true;
+    }
+    public void OpenView(GameObject image)
     {
         if (routine != null) return;
         currentImage = image;
-        routine = StartCoroutine(BookRoutine(startAnimName));
+        InputManager.IsInUI = true;
+        routine = StartCoroutine(BookRoutine(null,true));
     }
 
-    IEnumerator BookRoutine(string startAnimName)
+    IEnumerator BookRoutine(string startAnimName,bool viewmode)
     {
         canClose = false;
         closeButtonCanvasGroup.alpha = 0f;
@@ -39,8 +50,12 @@ public class ExtraBook : MonoBehaviour
         
         player.inputLocked = true;
         currentImage.SetActive(true);
+        
+        imagePan = currentImage.GetComponentInChildren<ImagePanController>(true);
+        if (imagePan != null) imagePan.SetViewMode(viewmode);
+        
         closeButton.SetActive(true);
-        vignetteAnimator.SetActive(false);
+        if(!viewmode) vignetteAnimator.SetActive(false);
         if (!string.IsNullOrEmpty(startAnimName))
         {
             Animator anim = currentImage.GetComponent<Animator>();
@@ -54,8 +69,6 @@ public class ExtraBook : MonoBehaviour
     
     IEnumerator FadeInCloseButton()
     {
-        closeButtonCanvasGroup.blocksRaycasts = true;
-
         float timer = 0f;
 
         while (timer < buttonFadeDuration)
@@ -76,21 +89,24 @@ public class ExtraBook : MonoBehaviour
     {
         if (!canClose || routine == null)
             return;
-
+        canClose = false;
         StartCoroutine(CloseBookRoutine());
     }
 
     IEnumerator CloseBookRoutine()
     {
-        canClose = false;
-
         closeButtonCanvasGroup.interactable = false;
-
         darkAnimator.gameObject.SetActive(true);
         herbariumController.darkAnimationFinished = false;
         darkAnimator.SetTrigger("Closing2");
 
         yield return new WaitUntil(() => herbariumController.darkAnimationFinished);
+        
+        if (imagePan != null)
+        {
+            imagePan.SetViewMode(false);
+            imagePan = null;
+        }
 
         vignetteAnimator.SetActive(true);
         currentImage.SetActive(false);
@@ -99,5 +115,6 @@ public class ExtraBook : MonoBehaviour
         routine = null;
         currentImage = null;
         herbariumController.UpdatePlayerAnimationStage();
+        InputManager.IsInUI = false;
     }
 }
